@@ -1,0 +1,2913 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tipster Panel · Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════
+   DESIGN TOKENS — Modern 2026 Light Theme
+═══════════════════════════════════════════ */
+:root {
+  --bg:        #f4f6fa;
+  --surface:   #ffffff;
+  --surface2:  #f8f9fc;
+  --surface3:  #eef1f8;
+  --border:    #e5e9f2;
+  --border2:   #d8dde8;
+  --accent:    #4361ee;
+  --accent2:   #7b9bff;
+  --accent-g:  linear-gradient(135deg,#4361ee,#7b9bff);
+  --green:     #10b981;
+  --green2:    #34d399;
+  --red:       #ef4444;
+  --amber:     #f59e0b;
+  --text:      #0f1624;
+  --text2:     #4a5568;
+  --text3:     #94a3b8;
+  --shadow:    0 1px 3px rgba(15,22,36,.06), 0 4px 16px rgba(15,22,36,.06);
+  --shadow-md: 0 4px 24px rgba(15,22,36,.1), 0 1px 3px rgba(15,22,36,.06);
+  --shadow-lg: 0 16px 48px rgba(15,22,36,.14), 0 4px 12px rgba(15,22,36,.06);
+  --radius:    12px;
+  --mono:      'JetBrains Mono', monospace;
+  --head:      'Outfit', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--head); font-size: 13px; }
+
+/* ═══════════════════════════════════════════
+   LICENSE SCREEN
+═══════════════════════════════════════════ */
+#licenseScreen {
+  position: fixed; inset: 0; z-index: 9999;
+  background: linear-gradient(145deg, #0a0e1a 0%, #121830 50%, #0d1425 100%);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--head);
+}
+.lic-bg {
+  position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+}
+.lic-orb {
+  position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.18;
+  animation: orbFloat 8s ease-in-out infinite;
+}
+.lic-orb-1 { width:500px;height:500px;background:#4361ee;top:-120px;left:-100px; animation-delay:0s; }
+.lic-orb-2 { width:400px;height:400px;background:#7b9bff;bottom:-100px;right:-80px; animation-delay:3s; }
+.lic-orb-3 { width:300px;height:300px;background:#10b981;top:50%;left:50%;margin:-150px; animation-delay:1.5s; }
+@keyframes orbFloat {
+  0%,100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-30px) scale(1.05); }
+}
+.lic-card {
+  position: relative; z-index: 2;
+  background: rgba(255,255,255,.04);
+  backdrop-filter: blur(32px);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 24px;
+  padding: 52px 48px;
+  width: 460px;
+  box-shadow: 0 32px 80px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.12);
+  animation: slideUp .5s cubic-bezier(.16,1,.3,1) both;
+}
+@keyframes slideUp {
+  from { opacity:0; transform:translateY(32px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.lic-logo {
+  text-align: center; margin-bottom: 36px;
+}
+.lic-logo-icon {
+  width: 64px; height: 64px; border-radius: 18px;
+  background: linear-gradient(135deg,#4361ee,#7b9bff);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 28px; margin-bottom: 16px;
+  box-shadow: 0 8px 32px rgba(67,97,238,.4);
+}
+.lic-logo-title {
+  font-size: 24px; font-weight: 800; color: #fff; letter-spacing: -.5px;
+}
+.lic-logo-sub {
+  font-size: 12px; color: rgba(255,255,255,.4); letter-spacing: .1em; text-transform: uppercase; margin-top: 4px;
+}
+.lic-label {
+  font-size: 11px; font-weight: 600; color: rgba(255,255,255,.5);
+  text-transform: uppercase; letter-spacing: .1em; margin-bottom: 10px;
+}
+.lic-input-wrap { position: relative; margin-bottom: 8px; }
+.lic-input {
+  width: 100%; padding: 16px 20px;
+  background: rgba(255,255,255,.06);
+  border: 1.5px solid rgba(255,255,255,.1);
+  border-radius: 12px;
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 15px; font-weight: 500;
+  letter-spacing: .08em; text-transform: uppercase;
+  outline: none; transition: all .2s;
+  text-align: center;
+}
+.lic-input::placeholder { color: rgba(255,255,255,.25); }
+.lic-input:focus {
+  border-color: #4361ee;
+  background: rgba(67,97,238,.12);
+  box-shadow: 0 0 0 4px rgba(67,97,238,.2);
+}
+.lic-input.error {
+  border-color: #ef4444;
+  background: rgba(239,68,68,.1);
+  animation: shake .4s ease;
+}
+@keyframes shake {
+  0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 60%{transform:translateX(8px)} 80%{transform:translateX(-4px)}
+}
+.lic-err {
+  font-size: 12px; color: #f87171; text-align: center;
+  min-height: 20px; margin-bottom: 4px; transition: opacity .2s;
+}
+.lic-btn {
+  width: 100%; padding: 16px;
+  background: linear-gradient(135deg,#4361ee,#7b9bff);
+  border: none; border-radius: 12px;
+  color: #fff; font-family: var(--head); font-size: 15px; font-weight: 700;
+  cursor: pointer; letter-spacing: .02em; margin-top: 8px;
+  transition: all .2s;
+  box-shadow: 0 4px 20px rgba(67,97,238,.4);
+}
+.lic-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(67,97,238,.5); }
+.lic-btn:active { transform: translateY(0); }
+.lic-footer {
+  text-align: center; margin-top: 28px;
+  font-size: 11px; color: rgba(255,255,255,.25);
+}
+.lic-info-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(16,185,129,.12); border: 1px solid rgba(16,185,129,.25);
+  border-radius: 20px; padding: 6px 14px; margin-bottom: 24px;
+  font-size: 11px; color: #34d399; font-weight: 500;
+}
+
+/* ═══════════════════════════════════════════
+   PANEL (main app)
+═══════════════════════════════════════════ */
+.app { display: grid; grid-template-rows: 60px 1fr; height: 100vh; overflow: hidden; }
+
+/* Header */
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  z-index: 100;
+}
+.logo {
+  display: flex; align-items: center; gap: 12px;
+}
+.logo-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--accent-g);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; box-shadow: 0 4px 12px rgba(67,97,238,.3);
+}
+.logo-text {
+  font-size: 16px; font-weight: 800; color: var(--text); letter-spacing: -.4px;
+}
+.logo-text span { color: var(--accent); }
+.logo-version {
+  font-size: 10px; font-weight: 600; color: var(--text3);
+  background: var(--surface3); border: 1px solid var(--border);
+  border-radius: 6px; padding: 2px 7px; font-family: var(--mono);
+}
+.hstats { display: flex; gap: 6px; align-items: center; }
+.hstat {
+  display: flex; flex-direction: column; align-items: flex-end;
+  padding: 6px 14px; background: var(--surface3);
+  border: 1px solid var(--border); border-radius: 10px;
+}
+.hstat-val {
+  font-size: 14px; font-weight: 700; color: var(--green);
+  font-family: var(--mono);
+}
+.hstat-lbl { font-size: 9px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: .08em; }
+.hstat-uye .hstat-val { color: var(--accent); }
+.lic-tag {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(16,185,129,.08); border: 1px solid rgba(16,185,129,.2);
+  border-radius: 8px; padding: 6px 12px;
+  font-size: 11px; color: var(--green); font-weight: 600; font-family: var(--mono);
+  cursor: pointer; transition: all .15s;
+}
+.lic-tag:hover { background: rgba(16,185,129,.15); }
+.logout-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.2);
+  border-radius: 8px; padding: 6px 12px;
+  font-size: 11px; color: var(--red); font-weight: 600; font-family: var(--head);
+  cursor: pointer; transition: all .15s;
+}
+.logout-btn:hover { background: rgba(239,68,68,.18); border-color: rgba(239,68,68,.4); }
+
+/* Body */
+.body { display: grid; grid-template-columns: 340px 1fr; height: 100%; overflow: hidden; }
+
+/* Sidebar */
+.sidebar {
+  border-right: 1px solid var(--border);
+  overflow-y: auto; background: var(--surface);
+  display: flex; flex-direction: column;
+  scroll-behavior: smooth;
+}
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+.sb-sec { padding: 16px 18px; border-bottom: 1px solid var(--border); }
+.sb-title {
+  font-size: 10px; font-weight: 700; color: var(--text3);
+  letter-spacing: .12em; text-transform: uppercase; margin-bottom: 12px;
+  display: flex; align-items: center; gap: 6px;
+}
+.sb-title::before {
+  content: ''; display: block; width: 3px; height: 12px;
+  background: var(--accent-g); border-radius: 2px;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 9px 14px; border-radius: 9px; border: none;
+  font-family: var(--head); font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all .15s; white-space: nowrap;
+}
+.btn:hover { filter: brightness(1.05); transform: translateY(-1px); }
+.btn:active { transform: translateY(0); filter: brightness(.98); }
+.btn-primary { background: var(--accent-g); color: #fff; box-shadow: 0 4px 12px rgba(67,97,238,.25); }
+.btn-danger   { background: rgba(239,68,68,.1); color: var(--red); border: 1px solid rgba(239,68,68,.2); }
+.btn-success  { background: rgba(16,185,129,.1); color: var(--green); border: 1px solid rgba(16,185,129,.2); }
+.btn-ghost    { background: var(--surface3); color: var(--text2); border: 1px solid var(--border); }
+.excel-btns   { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.btn-full     { grid-column: 1/-1; }
+.xl-status    { font-size: 10px; color: var(--text3); margin-top: 8px; min-height: 14px; }
+
+/* Rate inputs */
+.rate-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.rate-lbl { font-size: 12px; color: var(--text2); flex: 1; }
+.rate-inp {
+  width: 58px; padding: 6px 8px;
+  background: var(--surface3); border: 1px solid var(--border2);
+  border-radius: 8px; color: var(--accent); font-family: var(--mono);
+  font-size: 13px; font-weight: 600; text-align: right; outline: none; transition: border .15s;
+}
+.rate-inp:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(67,97,238,.12); }
+.rate-sfx { font-size: 12px; color: var(--text3); width: 14px; }
+
+/* Form groups */
+.fg { margin-bottom: 10px; }
+.flbl {
+  font-size: 10px; color: var(--text3); font-weight: 600;
+  letter-spacing: .08em; text-transform: uppercase; display: block; margin-bottom: 5px;
+}
+.finp {
+  width: 100%; padding: 8px 11px;
+  background: var(--surface3); border: 1px solid var(--border2);
+  border-radius: 8px; color: var(--text); font-family: var(--mono); font-size: 12px;
+  outline: none; transition: all .15s;
+}
+.finp:focus { border-color: var(--accent); background: var(--surface); box-shadow: 0 0 0 3px rgba(67,97,238,.1); }
+.finp::placeholder { color: var(--text3); }
+.frow { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+/* Preview bar */
+.prev-bar {
+  background: linear-gradient(135deg,rgba(67,97,238,.06),rgba(123,155,255,.06));
+  border: 1px solid rgba(67,97,238,.15);
+  border-radius: 10px; padding: 10px 12px; margin: 8px 0;
+  display: flex; justify-content: space-between;
+}
+.prev-item { text-align: center; }
+.prev-val { font-size: 13px; font-weight: 700; color: var(--green); display: block; font-family: var(--mono); }
+.prev-lbl { font-size: 9px; color: var(--text3); font-weight: 600; text-transform: uppercase; }
+
+/* Member list */
+.mlwrap {
+  max-height: 160px; overflow-y: auto;
+  background: var(--surface3); border: 1px solid var(--border2);
+  border-radius: 9px;
+}
+.mlwrap::-webkit-scrollbar { width: 3px; }
+.mlwrap::-webkit-scrollbar-thumb { background: var(--border2); }
+.msearch {
+  width: 100%; padding: 8px 12px;
+  background: transparent; border: none;
+  border-bottom: 1px solid var(--border2);
+  color: var(--text); font-family: var(--head); font-size: 12px; outline: none;
+}
+.msearch::placeholder { color: var(--text3); }
+.mitem {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px; border-bottom: 1px solid var(--border);
+  cursor: pointer; transition: background .1s; user-select: none;
+}
+.mitem:last-child { border-bottom: none; }
+.mitem:hover { background: rgba(67,97,238,.04); }
+.mitem.sel { background: rgba(67,97,238,.07); }
+.mitem input[type=checkbox] { accent-color: var(--accent); width: 13px; height: 13px; flex-shrink: 0; }
+.minfo { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
+.mname { font-size: 12px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.msub { font-size: 10px; color: var(--text3); }
+.selcount { font-size: 10px; color: var(--accent); margin-top: 4px; font-weight: 500; }
+
+/* Tipster checks */
+.tgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.tchk {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 10px; border: 1px solid var(--border);
+  border-radius: 8px; cursor: pointer; transition: all .12s; user-select: none;
+  background: var(--surface3);
+}
+.tchk:hover { border-color: var(--border2); background: var(--surface); }
+.tchk.sel { border-color: var(--accent); background: rgba(67,97,238,.06); }
+.tchk input { display: none; }
+.tdot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; transition: background .12s; }
+.tname { font-size: 11px; color: var(--text2); font-weight: 500; }
+.tchk.sel .tname { color: var(--accent); }
+
+/* Main area */
+.main { display: grid; grid-template-rows: 1fr auto; overflow: hidden; }
+
+/* Tabs */
+.tabs {
+  display: flex; gap: 2px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface); padding: 0 20px;
+}
+.tab {
+  padding: 16px 18px; font-size: 11px; font-weight: 700;
+  color: var(--text3); cursor: pointer;
+  border-bottom: 2.5px solid transparent;
+  letter-spacing: .06em; text-transform: uppercase;
+  transition: all .15s; margin-bottom: -1px;
+}
+.tab:hover { color: var(--text2); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+.content { overflow-y: auto; padding: 20px; }
+.content::-webkit-scrollbar { width: 4px; }
+.content::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+/* Archive */
+.arsiv-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 0 16px 0; gap: 12px; flex-wrap: wrap;
+}
+.arsiv-toolbar-left { flex: 1; }
+.arsiv-toolbar-right { display: flex; gap: 8px; }
+.arsiv-search {
+  width: 100%; max-width: 320px;
+  padding: 8px 13px; border-radius: 9px;
+  border: 1px solid var(--border2);
+  background: var(--surface3); color: var(--text);
+  font-family: var(--head); font-size: 12px; outline: none;
+  transition: all .15s;
+}
+.arsiv-search:focus { border-color: var(--accent); background: var(--surface); box-shadow: 0 0 0 3px rgba(67,97,238,.1); }
+.arsiv-summary {
+  margin-top: 14px; padding: 12px 16px;
+  background: linear-gradient(135deg,rgba(67,97,238,.05),rgba(123,155,255,.05));
+  border: 1px solid rgba(67,97,238,.12); border-radius: 10px;
+  display: flex; gap: 24px; flex-wrap: wrap;
+  font-size: 12px; color: var(--text2);
+}
+.arsiv-summary span { font-weight: 700; color: var(--accent); }
+.arsiv-date { font-size: 11px; color: var(--text3); font-family: var(--mono); white-space: nowrap; }
+.abtn {
+  background: rgba(67,97,238,.08) !important;
+  color: var(--accent) !important;
+  border: 1px solid rgba(67,97,238,.18) !important;
+  margin-right: 4px;
+}
+.abtn:hover { background: rgba(67,97,238,.18) !important; }
+
+/* Table */
+.twrap { overflow-x: auto; border-radius: var(--radius); box-shadow: var(--shadow); }
+table { width: 100%; border-collapse: collapse; background: var(--surface); }
+thead th {
+  padding: 11px 14px; font-size: 10px; font-weight: 700;
+  color: var(--text3); text-align: left;
+  letter-spacing: .1em; text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2); white-space: nowrap;
+  position: sticky; top: 0; z-index: 1;
+}
+tbody td {
+  padding: 9px 14px; border-bottom: 1px solid var(--border);
+  color: var(--text); white-space: nowrap;
+}
+tbody tr:hover td { background: rgba(67,97,238,.03); }
+tbody tr:last-child td { border-bottom: none; }
+.mono { font-family: var(--mono); color: var(--text3); font-size: 11px; }
+.pos { color: var(--green); font-weight: 600; font-family: var(--mono); }
+.neg { color: var(--red); }
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px; border-radius: 6px;
+  font-size: 10px; font-weight: 600; margin: 1px;
+}
+.dbtn {
+  padding: 4px 10px; border: 1px solid rgba(239,68,68,.2);
+  border-radius: 6px; background: rgba(239,68,68,.06);
+  color: var(--red); font-family: var(--mono); font-size: 10px; cursor: pointer;
+  font-weight: 500; transition: all .12s;
+}
+.dbtn:hover { background: rgba(239,68,68,.15); }
+.editable { cursor: pointer; border-radius: 5px; transition: background .1s; }
+.editable:hover { background: rgba(67,97,238,.07) !important; }
+.ieditor {
+  width: 90px; padding: 3px 7px;
+  background: var(--surface3); border: 1.5px solid var(--accent);
+  border-radius: 6px; color: var(--text);
+  font-family: var(--mono); font-size: 12px; outline: none;
+}
+.iedhint { font-size: 9px; color: var(--text3); display: block; margin-top: 2px; }
+.empty { text-align: center; padding: 60px 20px; color: var(--text3); }
+.empty-icon { font-size: 40px; margin-bottom: 14px; opacity: .3; }
+
+/* Tipster cards */
+.tcard-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(300px,1fr)); gap: 16px; }
+.tcard {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden;
+  box-shadow: var(--shadow); transition: box-shadow .2s, transform .15s;
+  cursor: pointer;
+}
+.tcard:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.tcard.empty-card { cursor: default; }
+.tcard.empty-card:hover { transform: none; box-shadow: var(--shadow); }
+.tcard-head {
+  padding: 16px 18px; border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.tcard-name { font-size: 15px; font-weight: 700; }
+.tcard-cnt { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.tcard-earn { font-size: 17px; font-weight: 800; color: var(--green); font-family: var(--mono); }
+.tcard-esub { font-size: 10px; color: var(--text3); text-align: right; }
+.trow { display: grid; grid-template-columns: 1fr 90px 90px; padding: 7px 16px; border-bottom: 1px solid var(--border); font-size: 11px; }
+.trow:last-child { border-bottom: none; }
+.trow:hover { background: var(--surface2); }
+.trow-hdr { background: var(--surface3); font-size: 10px; color: var(--text3); letter-spacing: .07em; text-transform: uppercase; font-weight: 600; }
+.trow-name { color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tv { text-align: right; }
+
+/* Tipster Detail Overlay */
+#tipsterDetail {
+  position: fixed; inset: 0; z-index: 8000;
+  background: rgba(10,14,26,.55); backdrop-filter: blur(6px);
+  display: none; align-items: center; justify-content: center;
+  animation: fadeIn .2s ease;
+}
+#tipsterDetail.show { display: flex; }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+.td-panel {
+  background: var(--surface); border-radius: 20px;
+  box-shadow: var(--shadow-lg); width: 960px; max-width: 96vw;
+  max-height: 88vh; display: flex; flex-direction: column;
+  animation: slideUp .25s cubic-bezier(.16,1,.3,1);
+}
+.td-head {
+  padding: 26px 30px 20px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+}
+.td-head-left { display: flex; flex-direction: column; gap: 5px; }
+.td-title { font-size: 24px; font-weight: 800; }
+.td-subtitle { font-size: 13px; color: var(--text3); }
+.td-head-right { display: flex; gap: 28px; align-items: center; }
+.td-stat { text-align: right; }
+.td-stat-val { font-size: 22px; font-weight: 800; color: var(--green); font-family: var(--mono); display: block; }
+.td-stat-lbl { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; }
+.td-close {
+  width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border);
+  background: var(--surface3); cursor: pointer; font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s; color: var(--text2); margin-left: 20px;
+}
+.td-close:hover { background: var(--red); color: #fff; border-color: var(--red); }
+.td-body { overflow-y: auto; flex: 1; padding: 0; }
+.td-body::-webkit-scrollbar { width: 4px; }
+.td-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+.td-table { width: 100%; border-collapse: collapse; }
+.td-table thead th {
+  padding: 12px 20px; font-size: 11px; font-weight: 700; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .1em; text-align: left;
+  background: var(--surface2); border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+.td-table tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+.td-table tbody tr:last-child { border-bottom: none; }
+.td-table tbody tr:hover { background: var(--surface2); }
+.td-table td { padding: 13px 20px; font-size: 13px; white-space: nowrap; }
+.td-table td.mono { font-family: var(--mono); }
+.td-table td.pos { color: var(--green); font-weight: 700; font-family: var(--mono); text-align: right; }
+.td-table td.num { font-family: var(--mono); text-align: right; }
+.td-foot {
+  padding: 16px 26px; border-top: 1px solid var(--border);
+  background: var(--surface2); border-radius: 0 0 20px 20px;
+  display: flex; gap: 28px; flex-shrink: 0;
+}
+.td-foot-item { font-size: 13px; color: var(--text2); }
+.td-foot-item span { font-weight: 700; color: var(--accent); font-family: var(--mono); }
+
+/* Total bar */
+.totbar {
+  background: var(--surface); border-top: 1px solid var(--border);
+  padding: 12px 24px; display: grid; grid-template-columns: repeat(4,1fr);
+  box-shadow: 0 -1px 0 var(--border);
+}
+.toti { padding: 0 16px; border-right: 1px solid var(--border); }
+.toti:first-child { padding-left: 0; }
+.toti:last-child { border-right: none; }
+.totl { font-size: 10px; color: var(--text3); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 3px; font-weight: 600; }
+.totv { font-size: 16px; font-weight: 800; color: var(--text); font-family: var(--mono); }
+.totv.g { color: var(--green); }
+.totv.b { color: var(--accent); }
+
+/* Info card */
+.info-card {
+  background: linear-gradient(135deg,rgba(67,97,238,.06),rgba(123,155,255,.04));
+  border: 1px solid rgba(67,97,238,.15); border-radius: 10px;
+  padding: 12px 14px; margin-top: 10px;
+}
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  padding: 12px 20px; border-radius: 10px;
+  font-size: 13px; font-weight: 500; z-index: 9999;
+  opacity: 0; transform: translateY(10px) scale(.97);
+  transition: all .22s; pointer-events: none;
+  box-shadow: var(--shadow-md);
+}
+.toast.show { opacity: 1; transform: translateY(0) scale(1); }
+.toast.ok   { background: #fff; border: 1px solid rgba(16,185,129,.3); color: var(--green); }
+.toast.warn { background: #fff; border: 1px solid rgba(245,158,11,.3); color: var(--amber); }
+.toast.err  { background: #fff; border: 1px solid rgba(239,68,68,.3); color: var(--red); }
+
+/* Modal */
+.moverlay {
+  position: fixed; inset: 0;
+  background: rgba(15,22,36,.45);
+  backdrop-filter: blur(8px);
+  z-index: 8888; display: none; align-items: center; justify-content: center;
+}
+.moverlay.show { display: flex; }
+.modal {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 28px; min-width: 360px; max-width: 500px;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp .2s ease both;
+}
+.modal-title { font-size: 17px; font-weight: 800; color: var(--text); margin-bottom: 12px; }
+.modal-body { font-size: 13px; color: var(--text2); line-height: 1.65; margin-bottom: 20px; max-height: 60vh; overflow-y: auto; }
+.modal-btns { display: flex; gap: 10px; justify-content: flex-end; }
+.mbtn { padding: 9px 22px; border-radius: 8px; font-family: var(--head); font-size: 12px; font-weight: 700; cursor: pointer; border: none; transition: all .15s; }
+.mbtn:hover { filter: brightness(1.05); }
+.mbtn-cancel { background: var(--surface3); color: var(--text2); border: 1px solid var(--border); }
+.mbtn-ok     { background: var(--accent-g); color: #fff; box-shadow: 0 4px 12px rgba(67,97,238,.25); }
+.mbtn-warn   { background: rgba(239,68,68,.1); color: var(--red); border: 1px solid rgba(239,68,68,.2); }
+
+/* License Manager Modal */
+.lic-mgr { padding: 0; min-width: 560px; }
+.lic-mgr-head {
+  padding: 20px 24px; border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg,rgba(67,97,238,.06),rgba(123,155,255,.04));
+  border-radius: 16px 16px 0 0;
+}
+.lic-mgr-body { padding: 20px 24px; max-height: 480px; overflow-y: auto; }
+.lic-code-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; border: 1px solid var(--border);
+  border-radius: 9px; margin-bottom: 8px;
+  background: var(--surface3); transition: all .15s;
+}
+.lic-code-row:hover { border-color: var(--border2); }
+.lic-code-val {
+  font-family: var(--mono); font-size: 13px; font-weight: 600;
+  color: var(--text); letter-spacing: .05em;
+}
+.lic-code-exp {
+  font-size: 10px; color: var(--text3); font-weight: 500;
+  font-family: var(--mono); margin-top: 2px;
+}
+.lic-status-badge {
+  padding: 4px 10px; border-radius: 20px;
+  font-size: 10px; font-weight: 700; font-family: var(--mono);
+}
+.lic-status-badge.active { background: rgba(16,185,129,.12); color: var(--green); border: 1px solid rgba(16,185,129,.2); }
+.lic-status-badge.used   { background: rgba(245,158,11,.1);  color: var(--amber); border: 1px solid rgba(245,158,11,.2); }
+.lic-status-badge.expired{ background: rgba(239,68,68,.1);   color: var(--red);   border: 1px solid rgba(239,68,68,.2); }
+
+/* Scrollbar global */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* Auto log */
+#autoLogWrap { margin-top: 10px; display: none; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     LICENSE SCREEN
+═══════════════════════════════════════════ -->
+<div id="licenseScreen">
+  <div class="lic-bg">
+    <div class="lic-orb lic-orb-1"></div>
+    <div class="lic-orb lic-orb-2"></div>
+    <div class="lic-orb lic-orb-3"></div>
+  </div>
+
+  <!-- ADIM 1: Lisans Kodu Girişi -->
+  <div class="lic-card" id="stepLicense">
+    <div class="lic-logo">
+      <div class="lic-logo-icon">📊</div>
+      <div class="lic-logo-title">TIPSTER PANEL</div>
+      <div class="lic-logo-sub">Pro Üye Yönetim Sistemi</div>
+    </div>
+    <div style="text-align:center;margin-bottom:20px">
+      <div class="lic-info-badge">🔐 Lisans Korumalı</div>
+    </div>
+    <div class="lic-label">Lisans Kodunuzu Girin</div>
+    <div class="lic-input-wrap">
+      <input
+        type="text" id="licInput" class="lic-input"
+        placeholder="XXXX-XXXX-XXXX-XXXX-XXXX"
+        maxlength="24"
+        oninput="licFormat(this)"
+        onkeydown="if(event.key==='Enter')licSubmit()"
+      >
+    </div>
+    <div class="lic-err" id="licErr">&nbsp;</div>
+    <button class="lic-btn" onclick="licSubmit()">Devam →</button>
+    <div class="lic-footer">
+      Lisans kodunuz yoksa satıcınızla iletişime geçin.<br>
+      YL26-… Yıllık · TK26-… Tek Kullanım
+    </div>
+  </div>
+
+  <!-- ADIM 2: Şifre Oluştur (ilk aktivasyon) -->
+  <div class="lic-card" id="stepSetPass" style="display:none">
+    <div class="lic-logo">
+      <div class="lic-logo-icon">🔑</div>
+      <div class="lic-logo-title">ŞİFRE OLUŞTUR</div>
+      <div class="lic-logo-sub" id="spLicLabel">Lisans aktive ediliyor…</div>
+    </div>
+    <div style="text-align:center;margin-bottom:20px">
+      <div class="lic-info-badge" id="spTypeBadge">✓ Lisans Doğrulandı</div>
+    </div>
+    <div class="lic-label">Şifre Belirleyin</div>
+    <div class="lic-input-wrap" style="margin-bottom:12px">
+      <input type="password" id="passInput1" class="lic-input" placeholder="Şifrenizi girin" onkeydown="if(event.key==='Enter')document.getElementById('passInput2').focus()">
+    </div>
+    <div class="lic-label">Şifreyi Onaylayın</div>
+    <div class="lic-input-wrap">
+      <input type="password" id="passInput2" class="lic-input" placeholder="Şifrenizi tekrar girin" onkeydown="if(event.key==='Enter')passCreate()">
+    </div>
+    <div class="lic-err" id="passErr">&nbsp;</div>
+    <button class="lic-btn" onclick="passCreate()">Panele Giriş Yap →</button>
+    <div class="lic-footer">Şifrenizi unutmayın. Lisans kodu ile sıfırlayabilirsiniz.</div>
+  </div>
+
+  <!-- ADIM 3: Şifre Girişi (sonraki oturumlar) -->
+  <div class="lic-card" id="stepLogin" style="display:none">
+    <div class="lic-logo">
+      <div class="lic-logo-icon">📊</div>
+      <div class="lic-logo-title">TIPSTER PANEL</div>
+      <div class="lic-logo-sub" id="loginLicLabel">Hoş Geldiniz</div>
+    </div>
+    <div style="text-align:center;margin-bottom:20px">
+      <div class="lic-info-badge" id="loginTypeBadge">✓ Aktif Lisans</div>
+    </div>
+    <div class="lic-label">Şifrenizi Girin</div>
+    <div class="lic-input-wrap">
+      <input type="password" id="loginPassInput" class="lic-input" placeholder="Şifreniz" onkeydown="if(event.key==='Enter')loginSubmit()">
+    </div>
+    <div class="lic-err" id="loginErr">&nbsp;</div>
+    <button class="lic-btn" onclick="loginSubmit()">Giriş Yap →</button>
+    <div class="lic-footer" style="margin-top:20px">
+      <span style="color:rgba(255,255,255,.4);cursor:pointer;text-decoration:underline" onclick="showResetMode()">Şifremi unuttum (lisans koduyla sıfırla)</span>
+    </div>
+  </div>
+
+  <!-- ADIM 4: Şifre Sıfırlama -->
+  <div class="lic-card" id="stepReset" style="display:none">
+    <div class="lic-logo">
+      <div class="lic-logo-icon">🔄</div>
+      <div class="lic-logo-title">ŞİFRE SIFIRLA</div>
+      <div class="lic-logo-sub">Lisans kodunuzla doğrulayın</div>
+    </div>
+    <div class="lic-label">Lisans Kodunuzu Girin</div>
+    <div class="lic-input-wrap" style="margin-bottom:12px">
+      <input type="text" id="resetLicInput" class="lic-input" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX" maxlength="24" oninput="licFormat(this)" onkeydown="if(event.key==='Enter')document.getElementById('resetPass1').focus()">
+    </div>
+    <div class="lic-label">Yeni Şifre</div>
+    <div class="lic-input-wrap" style="margin-bottom:12px">
+      <input type="password" id="resetPass1" class="lic-input" placeholder="Yeni şifreniz" onkeydown="if(event.key==='Enter')document.getElementById('resetPass2').focus()">
+    </div>
+    <div class="lic-label">Yeni Şifre (Tekrar)</div>
+    <div class="lic-input-wrap">
+      <input type="password" id="resetPass2" class="lic-input" placeholder="Yeni şifrenizi onaylayın" onkeydown="if(event.key==='Enter')resetSubmit()">
+    </div>
+    <div class="lic-err" id="resetErr">&nbsp;</div>
+    <button class="lic-btn" onclick="resetSubmit()">Şifreyi Sıfırla →</button>
+    <div class="lic-footer" style="margin-top:16px">
+      <span style="color:rgba(255,255,255,.4);cursor:pointer;text-decoration:underline" onclick="showLoginStep()">← Geri dön</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     MAIN PANEL
+═══════════════════════════════════════════ -->
+<div class="app" id="mainApp" style="display:none">
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">📊</div>
+      <div>
+        <div class="logo-text">Tipster<span>Panel</span></div>
+      </div>
+      <div class="logo-version">PRO v2.0</div>
+    </div>
+    <div class="hstats">
+      <div class="hstat hstat-uye"><div class="hstat-val" id="h-uye">0</div><div class="hstat-lbl">Üye</div></div>
+      <div class="hstat"><div class="hstat-val" id="h-ciro">₺0,00</div><div class="hstat-lbl">Ciro Kom.</div></div>
+      <div class="hstat"><div class="hstat-val" id="h-kazanc">₺0,00</div><div class="hstat-lbl">Kazanç Kom.</div></div>
+      <div class="hstat"><div class="hstat-val" id="h-total">₺0,00</div><div class="hstat-lbl">Toplam Kom.</div></div>
+      <button class="lic-tag" onclick="showLicManager()" title="Lisans Yönetimi">
+        🔐 <span id="licTagText">Lisans</span>
+      </button>
+      <button class="logout-btn" onclick="doLogout()" title="Çıkış Yap">
+        ⏻ <span>Çıkış</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="body">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sb-sec">
+        <div class="sb-title">Excel İşlemleri</div>
+        <div class="excel-btns">
+          <button class="btn btn-success" onclick="document.getElementById('xlInput').click()">⬆ Excel Yükle</button>
+          <button class="btn btn-danger" onclick="doConfirmClear()">✕ Temizle</button>
+          <button class="btn btn-primary btn-full" onclick="doExport()">⬇ Excel Olarak İndir</button>
+        </div>
+        <input type="file" id="xlInput" accept=".xlsx,.xls" style="display:none" onchange="doLoadExcel(event)">
+        <div class="xl-status" id="xlStatus"></div>
+        <div class="info-card" style="margin-top:10px">
+          <div style="font-size:11px;color:var(--accent);font-weight:600;margin-bottom:8px">📋 Excel 2. Sekme Formatı</div>
+          <div style="font-size:11px;color:var(--text2);line-height:1.9">
+            <span style="color:var(--text3)">Satır 1</span> → Başlıklar: <span style="color:var(--accent)">Tipster 1, Tipster 2...</span><br>
+            <span style="color:var(--text3)">Alt satırlar</span> → Telefon numaraları
+          </div>
+        </div>
+      </div>
+
+      <div class="sb-sec">
+        <div class="sb-title">Komisyon Oranları</div>
+        <div class="rate-row">
+          <span class="rate-lbl">Ciro komisyonu</span>
+          <input type="number" class="rate-inp" id="rCiro" value="2" min="0" max="100" step="0.1" oninput="doRecalc()">
+          <span class="rate-sfx">%</span>
+        </div>
+        <div class="rate-row" style="display:none">
+          <span class="rate-lbl">Kazanç komisyonu</span>
+          <input type="number" class="rate-inp" id="rKazanc" value="0" min="0" max="100" step="0.1" oninput="doRecalc()">
+          <span class="rate-sfx">%</span>
+        </div>
+      </div>
+
+      <div class="sb-sec" style="flex:1">
+        <div class="sb-title">Otomatik Kayıt Bilgisi</div>
+        <input type="hidden" id="mSearch">
+        <input type="hidden" id="fHafta">
+        <input type="hidden" id="fCiro" value="0">
+        <input type="hidden" id="fKazanc" value="0">
+        <input type="hidden" id="selCount">
+        <span id="pCR" style="display:none">2</span>
+        <span id="pKR" style="display:none">0</span>
+        <span id="pCiro" style="display:none"></span>
+        <span id="pKazanc" style="display:none"></span>
+        <span id="pTotal" style="display:none"></span>
+        <div id="mList" style="display:none"></div>
+        <div id="tChecks" style="display:none"></div>
+
+        <div class="info-card">
+          <div style="font-size:11px;color:var(--accent);font-weight:600;margin-bottom:8px">ℹ Excel 2. Sekme Detayı</div>
+          <div style="font-size:11px;color:var(--text2);line-height:1.8">
+            Her sütun bir tipstera aittir. Altına telefon numarası yazılan üyeler o tipstere otomatik eklenir.<br><br>
+            Üyeyi <span style="color:var(--red);font-weight:600">silmek</span> için numarayı sütundan kaldırıp Excel'i tekrar yükleyin.
+          </div>
+        </div>
+
+        <div id="autoLogWrap">
+          <div class="sb-title" style="margin-bottom:6px;margin-top:10px">Son Yükleme Sonucu</div>
+          <div id="autoLog" style="font-size:11px;color:var(--text2);background:var(--surface3);border-radius:8px;padding:10px 12px;border:1px solid var(--border);line-height:1.8"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main">
+      <div style="display:flex;flex-direction:column;overflow:hidden;height:100%">
+        <div class="tabs">
+          <div class="tab active" onclick="switchTab('members',this)">Tüm Üyeler</div>
+          <div class="tab" onclick="switchTab('tipsters',this)">Tipster Görünümü</div>
+          <div class="tab" onclick="switchTab('arsiv',this)">🗄 Arşiv</div>
+        </div>
+        <div class="content" style="flex:1">
+          <div class="tab-pane active" id="tab-members">
+            <div class="twrap">
+              <table>
+                <thead><tr>
+                  <th>Üye (Son 4)</th><th>Telefon</th><th>Açıklama</th><th>Hafta</th>
+                  <th>Bakiye+Kazanç ₺</th><th>Tipster Kom.</th><th>Toplam Kom.</th><th>Tipsterlar</th><th></th>
+                </tr></thead>
+                <tbody id="tBody"></tbody>
+              </table>
+              <div id="tEmpty" class="empty">
+                <div class="empty-icon">◎</div>
+                <div>Henüz üye eklenmedi.</div>
+              </div>
+            </div>
+          </div>
+          <div class="tab-pane" id="tab-tipsters">
+            <div class="tcard-grid" id="tCards">
+              <div class="empty" style="grid-column:1/-1">
+                <div class="empty-icon">◈</div>
+                <div>Üye eklendiğinde tipster kartları burada görünür.</div>
+              </div>
+            </div>
+          </div>
+          <div class="tab-pane" id="tab-arsiv">
+            <div class="arsiv-toolbar">
+              <div class="arsiv-toolbar-left">
+                <input type="text" id="arsivSearch" class="arsiv-search" placeholder="🔍 Arşivde ara…" oninput="renderArsiv()">
+              </div>
+              <div class="arsiv-toolbar-right">
+                <button class="btn btn-ghost" onclick="arsivExport()" title="Arşivi Excel'e aktar">⬇ Excel</button>
+                <button class="btn btn-danger" onclick="arsivClear()" title="Tüm arşivi sil">🗑 Arşivi Temizle</button>
+              </div>
+            </div>
+            <div id="arsivEmpty" class="empty" style="display:none">
+              <div class="empty-icon">🗄</div>
+              <div>Henüz arşivlenmiş kayıt yok.<br><small style="color:var(--text3)">Ana tablodaki kayıtlar "Arşivle" butonu ile buraya taşınır.</small></div>
+            </div>
+            <div class="twrap" id="arsivWrap" style="display:none">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Arşiv Tarihi</th>
+                    <th>Üye (Son 4)</th><th>Telefon</th><th>Açıklama</th><th>Hafta</th>
+                    <th>Bakiye+Kazanç ₺</th><th>Tipster Kom.</th><th>Toplam Kom.</th><th>Tipsterlar</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="arsivBody"></tbody>
+              </table>
+            </div>
+            <div class="arsiv-summary" id="arsivSummary"></div>
+          </div>
+        </div>
+      </div>
+      <div class="totbar">
+        <div class="toti"><div class="totl">Toplam Üye</div><div class="totv b" id="totUye">0</div></div>
+        <div class="toti"><div class="totl">Toplam Ciro</div><div class="totv" id="totCiro">₺0,00</div></div>
+        <div class="toti"><div class="totl">Ciro Kom.</div><div class="totv g" id="totCK">₺0,00</div></div>
+        <div class="toti"><div class="totl">Toplam Komisyon</div><div class="totv g" id="totAll">₺0,00</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tipster Detail Overlay -->
+<div id="tipsterDetail">
+  <div class="td-panel">
+    <div class="td-head">
+      <div class="td-head-left">
+        <div class="td-title" id="tdTitle">Tipster</div>
+        <div class="td-subtitle" id="tdSubtitle"></div>
+      </div>
+      <div class="td-head-right">
+        <div class="td-stat">
+          <span class="td-stat-val" id="tdKom">₺0,00</span>
+          <span class="td-stat-lbl">Tipster Kom.</span>
+        </div>
+        <div class="td-stat">
+          <span class="td-stat-val" id="tdUye" style="color:var(--accent)">0</span>
+          <span class="td-stat-lbl">Üye</span>
+        </div>
+        <button class="td-close" onclick="closeTipsterDetail()">✕</button>
+      </div>
+    </div>
+    <div class="td-body">
+      <table class="td-table">
+        <thead>
+          <tr>
+            <th>Üye (Son 4)</th><th>Telefon</th><th>Açıklama</th>
+            <th>Hafta</th><th style="text-align:right">Bakiye+Kaz.</th><th style="text-align:right">Tipster Kom.</th><th style="text-align:right">Toplam Kom.</th>
+          </tr>
+        </thead>
+        <tbody id="tdBody"></tbody>
+      </table>
+    </div>
+    <div class="td-foot" id="tdFoot"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Modal -->
+<div class="moverlay" id="moverlay">
+  <div class="modal">
+    <div class="modal-title" id="mTitle"></div>
+    <div class="modal-body" id="mBody"></div>
+    <div class="modal-btns" id="mBtns"></div>
+  </div>
+</div>
+
+<!-- License Manager Modal -->
+<div class="moverlay" id="licMgrOverlay">
+  <div class="modal lic-mgr" style="padding:0">
+    <div class="lic-mgr-head">
+      <div style="font-size:17px;font-weight:800;color:var(--text)">🔐 Lisans Yönetimi</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:4px">500 adet yıllık lisans kodu</div>
+    </div>
+    <div class="lic-mgr-body">
+      <div id="licList"></div>
+    </div>
+    <div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px">
+      <button class="mbtn mbtn-cancel" onclick="document.getElementById('licMgrOverlay').classList.remove('show')">Kapat</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  PANEL — CONFIG & STATE  (en üstte olmalı)
+// ═══════════════════════════════════════════════════════════════
+let TIPSTERS = ['Tipster 1','Tipster 2','Tipster 3','Tipster 4','Tipster 5','Tipster 6'];
+const TCOLORS_BASE = [
+  '#4361ee','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4',
+  '#ec4899','#f97316','#14b8a6','#e11d48','#0ea5e9','#84cc16',
+  '#d97706','#7c3aed','#0891b2','#be185d','#4f46e5','#15803d'
+];
+function getTColor(i) { return TCOLORS_BASE[i % TCOLORS_BASE.length]; }
+const TCOLORS = new Proxy({}, { get: (_, i) => getTColor(Number(i)) });
+const SK = 'tipsterPanelV4';
+const SK_ARSIV = 'tipsterPanelArsiv';
+
+let MEMBERS = [];
+let entries = [];
+let selSet  = new Set();
+let arsivData = [];
+
+// ═══════════════════════════════════════════════════════════════
+//  LICENSE SYSTEM
+// ═══════════════════════════════════════════════════════════════
+
+const LIC_CODES = {
+  'YL26-XAJI-0Y6D-PBHS-AHXT': { label: 'Yıllık #1', type: 'annual', expiry: '2027-05-02' },
+  'YL26-HV3A-3ZMF-8MDD-4V30': { label: 'Yıllık #2', type: 'annual', expiry: '2027-05-02' },
+  'YL26-T9NT-3W5U-ZBIK-CIDK': { label: 'Yıllık #3', type: 'annual', expiry: '2027-05-02' },
+  'YL26-WNNH-J7XV-G0FN-9XUY': { label: 'Yıllık #4', type: 'annual', expiry: '2027-05-02' },
+  'YL26-41IB-LJH7-5LXO-6QJI': { label: 'Yıllık #5', type: 'annual', expiry: '2027-05-02' },
+  'YL26-UJV6-OH9S-DBDW-2PCN': { label: 'Yıllık #6', type: 'annual', expiry: '2027-05-02' },
+  'YL26-9T84-AZYT-JXEP-Q85J': { label: 'Yıllık #7', type: 'annual', expiry: '2027-05-02' },
+  'YL26-SG65-KXVF-1T2T-ALA7': { label: 'Yıllık #8', type: 'annual', expiry: '2027-05-02' },
+  'YL26-53LC-58DR-C11E-RTJ5': { label: 'Yıllık #9', type: 'annual', expiry: '2027-05-02' },
+  'YL26-PHT0-HL9X-PSEI-MVIH': { label: 'Yıllık #10', type: 'annual', expiry: '2027-05-02' },
+  'YL26-CWI6-4CIY-HE7U-R23G': { label: 'Yıllık #11', type: 'annual', expiry: '2027-05-02' },
+  'YL26-DPPQ-0Y9D-OM5I-GQPK': { label: 'Yıllık #12', type: 'annual', expiry: '2027-05-02' },
+  'YL26-I7P5-TB94-874F-RHOC': { label: 'Yıllık #13', type: 'annual', expiry: '2027-05-02' },
+  'YL26-N9J2-QP89-UZFK-8UT0': { label: 'Yıllık #14', type: 'annual', expiry: '2027-05-02' },
+  'YL26-CVS4-F8CG-VYIE-6IVW': { label: 'Yıllık #15', type: 'annual', expiry: '2027-05-02' },
+  'YL26-PVS7-HZIO-YKL1-CQ99': { label: 'Yıllık #16', type: 'annual', expiry: '2027-05-02' },
+  'YL26-CHJ7-55NF-4ZW9-XA3K': { label: 'Yıllık #17', type: 'annual', expiry: '2027-05-02' },
+  'YL26-X7EE-DTJV-ZHWJ-R64D': { label: 'Yıllık #18', type: 'annual', expiry: '2027-05-02' },
+  'YL26-PJA1-WJ0T-PAC5-6T4U': { label: 'Yıllık #19', type: 'annual', expiry: '2027-05-02' },
+  'YL26-FEL6-246H-ID25-OWF7': { label: 'Yıllık #20', type: 'annual', expiry: '2027-05-02' },
+  'YL26-5935-A0L7-253J-2D54': { label: 'Yıllık #21', type: 'annual', expiry: '2027-05-02' },
+  'YL26-I3QK-2IAG-L58K-XO9T': { label: 'Yıllık #22', type: 'annual', expiry: '2027-05-02' },
+  'YL26-7E8G-8JDP-0LVS-NUJZ': { label: 'Yıllık #23', type: 'annual', expiry: '2027-05-02' },
+  'YL26-A7TZ-0YNC-XLL4-ZKLO': { label: 'Yıllık #24', type: 'annual', expiry: '2027-05-02' },
+  'YL26-OKEP-7Y6W-KTAK-PUXQ': { label: 'Yıllık #25', type: 'annual', expiry: '2027-05-02' },
+  'YL26-PHR6-2GDS-WM31-YIHA': { label: 'Yıllık #26', type: 'annual', expiry: '2027-05-02' },
+  'YL26-IR4C-OWGZ-RIXA-11DP': { label: 'Yıllık #27', type: 'annual', expiry: '2027-05-02' },
+  'YL26-G8SB-I4Q2-Y9V8-6WZS': { label: 'Yıllık #28', type: 'annual', expiry: '2027-05-02' },
+  'YL26-3T60-RJIW-1SWJ-CKJL': { label: 'Yıllık #29', type: 'annual', expiry: '2027-05-02' },
+  'YL26-TEIY-ZCOT-OHP6-VZ41': { label: 'Yıllık #30', type: 'annual', expiry: '2027-05-02' },
+  'YL26-NAM1-48P0-TVHH-PBMY': { label: 'Yıllık #31', type: 'annual', expiry: '2027-05-02' },
+  'YL26-OFQE-WAOU-AXEQ-BNHL': { label: 'Yıllık #32', type: 'annual', expiry: '2027-05-02' },
+  'YL26-1N13-JCAT-9MX2-X18H': { label: 'Yıllık #33', type: 'annual', expiry: '2027-05-02' },
+  'YL26-AFEY-UHZ1-GV0E-38DA': { label: 'Yıllık #34', type: 'annual', expiry: '2027-05-02' },
+  'YL26-LY8O-ZCYW-D14V-E92M': { label: 'Yıllık #35', type: 'annual', expiry: '2027-05-02' },
+  'YL26-PNSM-43D8-W3ZP-08J3': { label: 'Yıllık #36', type: 'annual', expiry: '2027-05-02' },
+  'YL26-TRP0-J43D-5IQV-NB4G': { label: 'Yıllık #37', type: 'annual', expiry: '2027-05-02' },
+  'YL26-H2M5-ZJA8-DZR1-YXR2': { label: 'Yıllık #38', type: 'annual', expiry: '2027-05-02' },
+  'YL26-DHYL-URTP-0LZJ-JEGE': { label: 'Yıllık #39', type: 'annual', expiry: '2027-05-02' },
+  'YL26-T1GH-R09S-KDGI-GATJ': { label: 'Yıllık #40', type: 'annual', expiry: '2027-05-02' },
+  'YL26-9TZE-5R5U-QPGB-7R3O': { label: 'Yıllık #41', type: 'annual', expiry: '2027-05-02' },
+  'YL26-CWBF-UK9E-1V2I-SQP4': { label: 'Yıllık #42', type: 'annual', expiry: '2027-05-02' },
+  'YL26-9KWV-08HH-XFGC-AQVK': { label: 'Yıllık #43', type: 'annual', expiry: '2027-05-02' },
+  'YL26-IZZQ-Y72W-X7PT-X63C': { label: 'Yıllık #44', type: 'annual', expiry: '2027-05-02' },
+  'YL26-FL0U-KEYZ-7SRC-BPLJ': { label: 'Yıllık #45', type: 'annual', expiry: '2027-05-02' },
+  'YL26-D84U-89YJ-B1QX-6GVW': { label: 'Yıllık #46', type: 'annual', expiry: '2027-05-02' },
+  'YL26-RDML-Y4LY-K83T-QLL8': { label: 'Yıllık #47', type: 'annual', expiry: '2027-05-02' },
+  'YL26-OS9X-TOGN-1W1H-T7PZ': { label: 'Yıllık #48', type: 'annual', expiry: '2027-05-02' },
+  'YL26-E9VI-FTTD-96QE-3RZS': { label: 'Yıllık #49', type: 'annual', expiry: '2027-05-02' },
+  'YL26-J49I-TN7S-55J2-O7S3': { label: 'Yıllık #50', type: 'annual', expiry: '2027-05-02' },
+  'YL26-KKV9-RFTM-TTQL-GZUI': { label: 'Yıllık #51', type: 'annual', expiry: '2027-05-02' },
+  'YL26-1B0Z-3NX3-9RBS-V55P': { label: 'Yıllık #52', type: 'annual', expiry: '2027-05-02' },
+  'YL26-SQ0O-XFQ8-MYX4-44NL': { label: 'Yıllık #53', type: 'annual', expiry: '2027-05-02' },
+  'YL26-Z15B-CW79-0PDW-5PY6': { label: 'Yıllık #54', type: 'annual', expiry: '2027-05-02' },
+  'YL26-B2KN-FTU2-GC5W-I6FQ': { label: 'Yıllık #55', type: 'annual', expiry: '2027-05-02' },
+  'YL26-JJA2-6YFP-MVXP-J4HN': { label: 'Yıllık #56', type: 'annual', expiry: '2027-05-02' },
+  'YL26-RIUU-9K9X-JUY0-BVR6': { label: 'Yıllık #57', type: 'annual', expiry: '2027-05-02' },
+  'YL26-K2VM-WWYZ-X4W6-XLPU': { label: 'Yıllık #58', type: 'annual', expiry: '2027-05-02' },
+  'YL26-0DK0-GET8-T63J-3R30': { label: 'Yıllık #59', type: 'annual', expiry: '2027-05-02' },
+  'YL26-ME8F-8409-82N2-ATQY': { label: 'Yıllık #60', type: 'annual', expiry: '2027-05-02' },
+  'YL26-YV37-DIA5-U6HC-36KO': { label: 'Yıllık #61', type: 'annual', expiry: '2027-05-02' },
+  'YL26-F8KR-D5EQ-Y08P-0FOD': { label: 'Yıllık #62', type: 'annual', expiry: '2027-05-02' },
+  'YL26-RO8B-NP84-DYT9-MOGE': { label: 'Yıllık #63', type: 'annual', expiry: '2027-05-02' },
+  'YL26-4QXX-VA2I-EUC1-HH5L': { label: 'Yıllık #64', type: 'annual', expiry: '2027-05-02' },
+  'YL26-F6A4-FEJG-XAA2-ILGB': { label: 'Yıllık #65', type: 'annual', expiry: '2027-05-02' },
+  'YL26-0S0R-2SDS-8B25-SQ8C': { label: 'Yıllık #66', type: 'annual', expiry: '2027-05-02' },
+  'YL26-ROYR-6CCV-CJWT-L9TQ': { label: 'Yıllık #67', type: 'annual', expiry: '2027-05-02' },
+  'YL26-VDZ4-X1ZH-QIMQ-ODPX': { label: 'Yıllık #68', type: 'annual', expiry: '2027-05-02' },
+  'YL26-NF7C-3DD0-3UVU-LEMX': { label: 'Yıllık #69', type: 'annual', expiry: '2027-05-02' },
+  'YL26-15Z8-VMUH-XID4-N1U3': { label: 'Yıllık #70', type: 'annual', expiry: '2027-05-02' },
+  'YL26-493W-XA73-JGZL-MA5U': { label: 'Yıllık #71', type: 'annual', expiry: '2027-05-02' },
+  'YL26-OFWB-0HPM-NZ1U-DBFW': { label: 'Yıllık #72', type: 'annual', expiry: '2027-05-02' },
+  'YL26-YJXR-PJ1E-PKYR-YBOV': { label: 'Yıllık #73', type: 'annual', expiry: '2027-05-02' },
+  'YL26-AKHE-JLA0-GNZS-43C5': { label: 'Yıllık #74', type: 'annual', expiry: '2027-05-02' },
+  'YL26-BA75-UUZP-EAL2-W37D': { label: 'Yıllık #75', type: 'annual', expiry: '2027-05-02' },
+  'YL26-4IVS-OLML-GSES-6M03': { label: 'Yıllık #76', type: 'annual', expiry: '2027-05-02' },
+  'YL26-3IFH-V1XG-1R11-Q7UW': { label: 'Yıllık #77', type: 'annual', expiry: '2027-05-02' },
+  'YL26-W5WF-CPKJ-CSLQ-C3C5': { label: 'Yıllık #78', type: 'annual', expiry: '2027-05-02' },
+  'YL26-4WSQ-T26Q-3XLR-FCD6': { label: 'Yıllık #79', type: 'annual', expiry: '2027-05-02' },
+  'YL26-MZSG-IPPS-FNKO-MV2X': { label: 'Yıllık #80', type: 'annual', expiry: '2027-05-02' },
+  'YL26-CDYK-0X65-MUFM-8ZOV': { label: 'Yıllık #81', type: 'annual', expiry: '2027-05-02' },
+  'YL26-7LN2-3Y30-YSXP-NNGH': { label: 'Yıllık #82', type: 'annual', expiry: '2027-05-02' },
+  'YL26-8RIE-C4D1-45BM-1ENF': { label: 'Yıllık #83', type: 'annual', expiry: '2027-05-02' },
+  'YL26-313F-POYI-PK0Q-TL3Q': { label: 'Yıllık #84', type: 'annual', expiry: '2027-05-02' },
+  'YL26-4N89-QKNS-832E-JX5T': { label: 'Yıllık #85', type: 'annual', expiry: '2027-05-02' },
+  'YL26-D44K-1J6F-P8HQ-MABS': { label: 'Yıllık #86', type: 'annual', expiry: '2027-05-02' },
+  'YL26-I9NB-74X2-EK3Z-EZQA': { label: 'Yıllık #87', type: 'annual', expiry: '2027-05-02' },
+  'YL26-CJ4T-0SEK-KBP2-QD6V': { label: 'Yıllık #88', type: 'annual', expiry: '2027-05-02' },
+  'YL26-ASIF-PWIO-XD9C-SS9T': { label: 'Yıllık #89', type: 'annual', expiry: '2027-05-02' },
+  'YL26-OQW9-JA2M-0W10-LBT3': { label: 'Yıllık #90', type: 'annual', expiry: '2027-05-02' },
+  'YL26-G2QZ-W3C1-QKBH-B7S9': { label: 'Yıllık #91', type: 'annual', expiry: '2027-05-02' },
+  'YL26-TJ1G-M25L-EN60-6N9R': { label: 'Yıllık #92', type: 'annual', expiry: '2027-05-02' },
+  'YL26-R7S2-0CV3-TLCX-LVPY': { label: 'Yıllık #93', type: 'annual', expiry: '2027-05-02' },
+  'YL26-MB5M-9J98-CWN2-Y8FV': { label: 'Yıllık #94', type: 'annual', expiry: '2027-05-02' },
+  'YL26-2BC2-NNUV-Y8N1-UTOX': { label: 'Yıllık #95', type: 'annual', expiry: '2027-05-02' },
+  'YL26-IE0R-NUJJ-Q9K6-RE4Q': { label: 'Yıllık #96', type: 'annual', expiry: '2027-05-02' },
+  'YL26-6QDY-4LMC-T64Z-7W2S': { label: 'Yıllık #97', type: 'annual', expiry: '2027-05-02' },
+  'YL26-EHE2-ATN2-TWDL-9ZS1': { label: 'Yıllık #98', type: 'annual', expiry: '2027-05-02' },
+  'YL26-3C9X-QYM5-2XG8-P6BE': { label: 'Yıllık #99', type: 'annual', expiry: '2027-05-02' },
+  'YL26-FFLZ-M764-JWTE-KTSG': { label: 'Yıllık #100', type: 'annual', expiry: '2027-05-02' },
+  'YL26-7FXZ-V4U3-BBXU-X1OX': { label: 'Yıllık #101', type: 'annual', expiry: '2027-05-02' },
+  'YL26-RWK8-R2YK-CCPR-HVLZ': { label: 'Yıllık #102', type: 'annual', expiry: '2027-05-02' },
+  'YL26-049E-NULQ-JIDK-NWI5': { label: 'Yıllık #103', type: 'annual', expiry: '2027-05-02' },
+  'YL26-FLUL-1RSR-LA8S-8HMB': { label: 'Yıllık #104', type: 'annual', expiry: '2027-05-02' },
+  'YL26-R5XQ-T4P5-01NO-UHTC': { label: 'Yıllık #105', type: 'annual', expiry: '2027-05-02' },
+  'YL26-S1K9-YE9O-2M71-HSSB': { label: 'Yıllık #106', type: 'annual', expiry: '2027-05-02' },
+  'YL26-ELRQ-VSLW-F90K-M3TZ': { label: 'Yıllık #107', type: 'annual', expiry: '2027-05-02' },
+  'YL26-K3NY-9V20-YAR8-21UZ': { label: 'Yıllık #108', type: 'annual', expiry: '2027-05-02' },
+  'YL26-VGWW-4FYB-8DAL-FYO1': { label: 'Yıllık #109', type: 'annual', expiry: '2027-05-02' },
+  'YL26-750C-EHLX-SLG6-MM1Z': { label: 'Yıllık #110', type: 'annual', expiry: '2027-05-02' },
+  'YL26-XYVG-IUI9-KKHZ-LM72': { label: 'Yıllık #111', type: 'annual', expiry: '2027-05-02' },
+  'YL26-JEYN-9382-KKZM-PJRH': { label: 'Yıllık #112', type: 'annual', expiry: '2027-05-02' },
+  'YL26-T7ZE-WVIY-TWBO-ZD1A': { label: 'Yıllık #113', type: 'annual', expiry: '2027-05-02' },
+  'YL26-T7O7-5RH8-LX6D-UT07': { label: 'Yıllık #114', type: 'annual', expiry: '2027-05-02' },
+  'YL26-6G5G-79OR-7875-AUD9': { label: 'Yıllık #115', type: 'annual', expiry: '2027-05-02' },
+  'YL26-K9TR-74QG-EFQJ-G02U': { label: 'Yıllık #116', type: 'annual', expiry: '2027-05-02' },
+  'YL26-1G46-3SDY-GFLI-JI18': { label: 'Yıllık #117', type: 'annual', expiry: '2027-05-02' },
+  'YL26-K0AX-YCEL-OS6Z-LE6K': { label: 'Yıllık #118', type: 'annual', expiry: '2027-05-02' },
+  'YL26-WHEF-0VOT-QTXH-I15C': { label: 'Yıllık #119', type: 'annual', expiry: '2027-05-02' },
+  'YL26-QZCU-CTSU-FLSE-HUDS': { label: 'Yıllık #120', type: 'annual', expiry: '2027-05-02' },
+  'YL26-3QSQ-CQ30-O30U-BMC9': { label: 'Yıllık #121', type: 'annual', expiry: '2027-05-02' },
+  'YL26-7C7B-O119-XP9N-56NY': { label: 'Yıllık #122', type: 'annual', expiry: '2027-05-02' },
+  'YL26-XTXM-GTT0-IAAK-YTT3': { label: 'Yıllık #123', type: 'annual', expiry: '2027-05-02' },
+  'YL26-IMJ7-0E3P-15AH-DBVZ': { label: 'Yıllık #124', type: 'annual', expiry: '2027-05-02' },
+  'YL26-B0OI-H5CS-K30L-VYLK': { label: 'Yıllık #125', type: 'annual', expiry: '2027-05-02' },
+  'YL26-FXHK-C856-WPR9-7Y2L': { label: 'Yıllık #126', type: 'annual', expiry: '2027-05-02' },
+  'YL26-OFN1-R4KZ-36U8-UEIH': { label: 'Yıllık #127', type: 'annual', expiry: '2027-05-02' },
+  'YL26-X74D-0GJY-V5G1-0UR5': { label: 'Yıllık #128', type: 'annual', expiry: '2027-05-02' },
+  'YL26-L8A7-8E9R-IVH6-T1NT': { label: 'Yıllık #129', type: 'annual', expiry: '2027-05-02' },
+  'YL26-MJSR-D9Q4-6NOU-HFJ7': { label: 'Yıllık #130', type: 'annual', expiry: '2027-05-02' },
+  'YL26-UPFL-N4RX-YJ38-XRG2': { label: 'Yıllık #131', type: 'annual', expiry: '2027-05-02' },
+  'YL26-GZR7-TXCB-48Y1-O4IZ': { label: 'Yıllık #132', type: 'annual', expiry: '2027-05-02' },
+  'YL26-ASNW-YWRR-ATAT-J9A3': { label: 'Yıllık #133', type: 'annual', expiry: '2027-05-02' },
+  'YL26-Y36D-DFGS-3JON-OU9I': { label: 'Yıllık #134', type: 'annual', expiry: '2027-05-02' },
+  'YL26-Y4X4-1DNT-CAGR-P2U4': { label: 'Yıllık #135', type: 'annual', expiry: '2027-05-02' },
+  'YL26-DTBH-55RB-C76U-B7L8': { label: 'Yıllık #136', type: 'annual', expiry: '2027-05-02' },
+  'YL26-V1ZO-CFI4-O6L1-F90S': { label: 'Yıllık #137', type: 'annual', expiry: '2027-05-02' },
+  'YL26-9BP4-M18O-1BJ9-RM7P': { label: 'Yıllık #138', type: 'annual', expiry: '2027-05-02' },
+  'YL26-YXDW-2ZCF-ZW0L-DALM': { label: 'Yıllık #139', type: 'annual', expiry: '2027-05-02' },
+  'YL26-JEGQ-TOAM-DVLN-KND6': { label: 'Yıllık #140', type: 'annual', expiry: '2027-05-02' },
+  'YL26-69UG-NEKR-CPPR-CJIW': { label: 'Yıllık #141', type: 'annual', expiry: '2027-05-02' },
+  'YL26-VHDK-8LW2-LM34-9EL8': { label: 'Yıllık #142', type: 'annual', expiry: '2027-05-02' },
+  'YL26-HL88-KZRU-IN3O-EUVT': { label: 'Yıllık #143', type: 'annual', expiry: '2027-05-02' },
+  'YL26-YT8Q-ZPKY-32OR-WIXZ': { label: 'Yıllık #144', type: 'annual', expiry: '2027-05-02' },
+  'YL26-2C9R-OS7Y-T2M6-TWD1': { label: 'Yıllık #145', type: 'annual', expiry: '2027-05-02' },
+  'YL26-XMXB-9YO1-8PAJ-SSUU': { label: 'Yıllık #146', type: 'annual', expiry: '2027-05-02' },
+  'YL26-QO1V-SMAD-O8E7-FLQH': { label: 'Yıllık #147', type: 'annual', expiry: '2027-05-02' },
+  'YL26-RRPZ-LK3E-4XYF-9IGF': { label: 'Yıllık #148', type: 'annual', expiry: '2027-05-02' },
+  'YL26-U8IO-GXPB-WHVN-ZH13': { label: 'Yıllık #149', type: 'annual', expiry: '2027-05-02' },
+  'YL26-CD5G-LQJ5-SXVW-VM4W': { label: 'Yıllık #150', type: 'annual', expiry: '2027-05-02' },
+  'YL26-3ZKW-DEEK-GYSP-ENGW': { label: 'Yıllık #151', type: 'annual', expiry: '2027-05-02' },
+  'YL26-YX9T-RFLQ-BMAE-38SR': { label: 'Yıllık #152', type: 'annual', expiry: '2027-05-02' },
+  'YL26-YO4R-CB1K-JTGQ-01TE': { label: 'Yıllık #153', type: 'annual', expiry: '2027-05-02' },
+  'YL26-E13N-3BZT-9D31-K9QM': { label: 'Yıllık #154', type: 'annual', expiry: '2027-05-02' },
+  'YL26-3P91-I3VM-ZWFF-HHCM': { label: 'Yıllık #155', type: 'annual', expiry: '2027-05-02' },
+  'YL26-KTLZ-KJ49-YD82-795E': { label: 'Yıllık #156', type: 'annual', expiry: '2027-05-02' },
+  'YL26-5IZ3-1YRU-JOQW-5DSK': { label: 'Yıllık #157', type: 'annual', expiry: '2027-05-02' },
+  'YL26-7N8L-A100-QXMC-THPH': { label: 'Yıllık #158', type: 'annual', expiry: '2027-05-02' },
+  'YL26-J3MU-URMY-BD2Q-E4PA': { label: 'Yıllık #159', type: 'annual', expiry: '2027-05-02' },
+  'YL26-8HYE-XF7J-XJN6-FOKZ': { label: 'Yıllık #160', type: 'annual', expiry: '2027-05-02' },
+  'YL26-IXZA-REIY-AZ39-PECN': { label: 'Yıllık #161', type: 'annual', expiry: '2027-05-02' },
+  'YL26-0DL5-E11E-9FTA-XP0W': { label: 'Yıllık #162', type: 'annual', expiry: '2027-05-02' },
+  'YL26-FOY4-DD1V-N8LF-JDTV': { label: 'Yıllık #163', type: 'annual', expiry: '2027-05-02' },
+  'YL26-V2Y4-XKSS-0KB6-8RER': { label: 'Yıllık #164', type: 'annual', expiry: '2027-05-02' },
+  'YL26-VT99-7E4U-NY18-1ACJ': { label: 'Yıllık #165', type: 'annual', expiry: '2027-05-02' },
+  'YL26-BC2S-WSOZ-CTWJ-LSH3': { label: 'Yıllık #166', type: 'annual', expiry: '2027-05-02' },
+  'YL26-TOW4-YCZ0-4CDP-QVL0': { label: 'Yıllık #167', type: 'annual', expiry: '2027-05-02' },
+  'YL26-0EZZ-F8S2-ZGE2-J51B': { label: 'Yıllık #168', type: 'annual', expiry: '2027-05-02' },
+  'YL26-3JCZ-UCQM-RUNJ-DU0I': { label: 'Yıllık #169', type: 'annual', expiry: '2027-05-02' },
+  'YL26-SB5I-QNF7-4T60-PLOZ': { label: 'Yıllık #170', type: 'annual', expiry: '2027-05-02' },
+  'YL26-JCNS-6G29-8CQK-4LTA': { label: 'Yıllık #171', type: 'annual', expiry: '2027-05-02' },
+  'YL26-HUKW-QVR1-H61I-AOIM': { label: 'Yıllık #172', type: 'annual', expiry: '2027-05-02' },
+  'YL26-458A-X40D-TIRC-9ZD7': { label: 'Yıllık #173', type: 'annual', expiry: '2027-05-02' },
+  'YL26-6SZN-9DDE-3CUP-8IJL': { label: 'Yıllık #174', type: 'annual', expiry: '2027-05-02' },
+  'YL26-2Z0L-JCH2-VFFQ-OT8H': { label: 'Yıllık #175', type: 'annual', expiry: '2027-05-02' },
+  'YL26-LJEF-Y3ZB-4LDI-MSYJ': { label: 'Yıllık #176', type: 'annual', expiry: '2027-05-02' },
+  'YL26-9BOQ-0IQ2-FA39-E3NW': { label: 'Yıllık #177', type: 'annual', expiry: '2027-05-02' },
+  'YL26-XUJ3-AC6P-E63L-BQGU': { label: 'Yıllık #178', type: 'annual', expiry: '2027-05-02' },
+  'YL26-3OBY-GHGK-5BWI-KOTC': { label: 'Yıllık #179', type: 'annual', expiry: '2027-05-02' },
+  'YL26-KEH5-SW22-92MT-R6SN': { label: 'Yıllık #180', type: 'annual', expiry: '2027-05-02' },
+  'YL26-GLH6-2C9T-199D-XJ37': { label: 'Yıllık #181', type: 'annual', expiry: '2027-05-02' },
+  'YL26-C9H4-2M44-GV3Z-6BZ8': { label: 'Yıllık #182', type: 'annual', expiry: '2027-05-02' },
+  'YL26-UUG9-5RLR-DIHS-A7HE': { label: 'Yıllık #183', type: 'annual', expiry: '2027-05-02' },
+  'YL26-Z74L-AV71-448N-7ODK': { label: 'Yıllık #184', type: 'annual', expiry: '2027-05-02' },
+  'YL26-EF82-8XG8-Y72I-VGLY': { label: 'Yıllık #185', type: 'annual', expiry: '2027-05-02' },
+  'YL26-E088-O98B-V78H-U7F0': { label: 'Yıllık #186', type: 'annual', expiry: '2027-05-02' },
+  'YL26-I9G5-DZX5-QJIC-JDAN': { label: 'Yıllık #187', type: 'annual', expiry: '2027-05-02' },
+  'YL26-085R-NTDR-5XYF-C4KL': { label: 'Yıllık #188', type: 'annual', expiry: '2027-05-02' },
+  'YL26-8CGN-0T6D-VWRB-7F6F': { label: 'Yıllık #189', type: 'annual', expiry: '2027-05-02' },
+  'YL26-DHGZ-Z0JK-IBU4-FMPK': { label: 'Yıllık #190', type: 'annual', expiry: '2027-05-02' },
+  'YL26-XVHA-GKC4-LORX-DTG5': { label: 'Yıllık #191', type: 'annual', expiry: '2027-05-02' },
+  'YL26-NQJQ-IJC1-YDMT-8VT4': { label: 'Yıllık #192', type: 'annual', expiry: '2027-05-02' },
+  'YL26-3PT5-R5RC-6ZS6-2YWE': { label: 'Yıllık #193', type: 'annual', expiry: '2027-05-02' },
+  'YL26-1G98-3EP9-P9W4-J66C': { label: 'Yıllık #194', type: 'annual', expiry: '2027-05-02' },
+  'YL26-NOLJ-Q52W-SPOF-V177': { label: 'Yıllık #195', type: 'annual', expiry: '2027-05-02' },
+  'YL26-UDKT-MONR-VBJF-VYB6': { label: 'Yıllık #196', type: 'annual', expiry: '2027-05-02' },
+  'YL26-LI07-6A3K-KRZD-5E9P': { label: 'Yıllık #197', type: 'annual', expiry: '2027-05-02' },
+  'YL26-3JPX-GH30-153S-FLSE': { label: 'Yıllık #198', type: 'annual', expiry: '2027-05-02' },
+  'YL26-45BG-34IQ-7ZJ3-SWEB': { label: 'Yıllık #199', type: 'annual', expiry: '2027-05-02' },
+  'YL26-NVG5-VMF6-0YKN-FU84': { label: 'Yıllık #200', type: 'annual', expiry: '2027-05-02' },
+  'YL26-XYJO-A21A-6XVA-J2K8': { label: 'Yıllık #201', type: 'annual', expiry: '2027-05-02' },
+  'YL26-XPNM-JQY3-ODSX-4NXV': { label: 'Yıllık #202', type: 'annual', expiry: '2027-05-02' },
+  'YL26-KDC9-X5JZ-6KF1-622V': { label: 'Yıllık #203', type: 'annual', expiry: '2027-05-02' },
+  'YL26-XYZX-9JPN-BZUG-0IT2': { label: 'Yıllık #204', type: 'annual', expiry: '2027-05-02' },
+  'YL26-6YS4-45GD-EJ31-GYMD': { label: 'Yıllık #205', type: 'annual', expiry: '2027-05-02' },
+  'YL26-M0L2-LJK4-Q5V7-C6S5': { label: 'Yıllık #206', type: 'annual', expiry: '2027-05-02' },
+  'YL26-NKB4-EHOU-6QLZ-2RWG': { label: 'Yıllık #207', type: 'annual', expiry: '2027-05-02' },
+  'YL26-WAJ1-G1R1-DWWO-8NBH': { label: 'Yıllık #208', type: 'annual', expiry: '2027-05-02' },
+  'YL26-NAL3-GYWI-YMEN-VG3K': { label: 'Yıllık #209', type: 'annual', expiry: '2027-05-02' },
+  'YL26-K0VM-59M6-MG87-OI0E': { label: 'Yıllık #210', type: 'annual', expiry: '2027-05-02' },
+  'YL26-0VGN-XB5J-TB9X-XAYP': { label: 'Yıllık #211', type: 'annual', expiry: '2027-05-02' },
+  'YL26-NTRF-ZWKX-XJVE-3DZE': { label: 'Yıllık #212', type: 'annual', expiry: '2027-05-02' },
+  'YL26-EDHH-JSHZ-KBRH-7LAY': { label: 'Yıllık #213', type: 'annual', expiry: '2027-05-02' },
+  'YL26-64YF-DS0D-JI9K-QDGB': { label: 'Yıllık #214', type: 'annual', expiry: '2027-05-02' },
+  'YL26-K2L0-D1B4-XGMP-W5D3': { label: 'Yıllık #215', type: 'annual', expiry: '2027-05-02' },
+  'YL26-GO8J-N42X-2EZC-7FOV': { label: 'Yıllık #216', type: 'annual', expiry: '2027-05-02' },
+  'YL26-2YGN-MBY4-9E7E-OBJL': { label: 'Yıllık #217', type: 'annual', expiry: '2027-05-02' },
+  'YL26-ZY1U-U9YM-SZDX-IMYN': { label: 'Yıllık #218', type: 'annual', expiry: '2027-05-02' },
+  'YL26-4U9B-XF44-5CRI-8BIX': { label: 'Yıllık #219', type: 'annual', expiry: '2027-05-02' },
+  'YL26-OIQ2-Q4QE-RXDO-UADV': { label: 'Yıllık #220', type: 'annual', expiry: '2027-05-02' },
+  'YL26-WKSH-Y8NB-IQUW-RXZE': { label: 'Yıllık #221', type: 'annual', expiry: '2027-05-02' },
+  'YL26-1HM3-8KSZ-BFFZ-ZDVG': { label: 'Yıllık #222', type: 'annual', expiry: '2027-05-02' },
+  'YL26-7OQ2-ZDO7-4V1Q-X8ER': { label: 'Yıllık #223', type: 'annual', expiry: '2027-05-02' },
+  'YL26-TB74-RS7G-U0EN-V5SN': { label: 'Yıllık #224', type: 'annual', expiry: '2027-05-02' },
+  'YL26-961J-88QE-OZ0K-Z4Z7': { label: 'Yıllık #225', type: 'annual', expiry: '2027-05-02' },
+  'YL26-WHWK-MY9X-8SYL-EMRU': { label: 'Yıllık #226', type: 'annual', expiry: '2027-05-02' },
+  'YL26-YP04-K43S-AFYH-1FKJ': { label: 'Yıllık #227', type: 'annual', expiry: '2027-05-02' },
+  'YL26-4YK1-B3D5-050U-I22K': { label: 'Yıllık #228', type: 'annual', expiry: '2027-05-02' },
+  'YL26-X7N8-9LTA-JW25-36ZX': { label: 'Yıllık #229', type: 'annual', expiry: '2027-05-02' },
+  'YL26-1TV1-8KGY-GGSN-PUEV': { label: 'Yıllık #230', type: 'annual', expiry: '2027-05-02' },
+  'YL26-JLZF-FLB7-WXRU-M2LH': { label: 'Yıllık #231', type: 'annual', expiry: '2027-05-02' },
+  'YL26-GCSO-TDHH-LMH1-T939': { label: 'Yıllık #232', type: 'annual', expiry: '2027-05-02' },
+  'YL26-AYQ6-WW8Y-L68N-TK63': { label: 'Yıllık #233', type: 'annual', expiry: '2027-05-02' },
+  'YL26-N2QB-6GS8-G8TA-CY15': { label: 'Yıllık #234', type: 'annual', expiry: '2027-05-02' },
+  'YL26-PDTZ-91X7-0FQL-DB2U': { label: 'Yıllık #235', type: 'annual', expiry: '2027-05-02' },
+  'YL26-UIJN-WPAY-TXW1-VZC7': { label: 'Yıllık #236', type: 'annual', expiry: '2027-05-02' },
+  'YL26-D2KD-1POX-RTEO-2T8F': { label: 'Yıllık #237', type: 'annual', expiry: '2027-05-02' },
+  'YL26-Y620-N8TT-EAVT-8K06': { label: 'Yıllık #238', type: 'annual', expiry: '2027-05-02' },
+  'YL26-MOXS-FH4G-G244-79QT': { label: 'Yıllık #239', type: 'annual', expiry: '2027-05-02' },
+  'YL26-KCD0-RLEX-DW6L-QWLV': { label: 'Yıllık #240', type: 'annual', expiry: '2027-05-02' },
+  'YL26-UNLP-AIH0-P4E0-5QMK': { label: 'Yıllık #241', type: 'annual', expiry: '2027-05-02' },
+  'YL26-TGV4-4FTJ-5CCA-SBUO': { label: 'Yıllık #242', type: 'annual', expiry: '2027-05-02' },
+  'YL26-V6TT-9Q1N-I10K-QSOS': { label: 'Yıllık #243', type: 'annual', expiry: '2027-05-02' },
+  'YL26-X43W-FSQG-8X80-RMHR': { label: 'Yıllık #244', type: 'annual', expiry: '2027-05-02' },
+  'YL26-CNBH-6NQQ-B9LZ-S34J': { label: 'Yıllık #245', type: 'annual', expiry: '2027-05-02' },
+  'YL26-TGXN-X4SN-6SM5-RRVS': { label: 'Yıllık #246', type: 'annual', expiry: '2027-05-02' },
+  'YL26-FFCX-HGNZ-EI3Z-RRHF': { label: 'Yıllık #247', type: 'annual', expiry: '2027-05-02' },
+  'YL26-4ABU-FWBU-CJG8-VUAZ': { label: 'Yıllık #248', type: 'annual', expiry: '2027-05-02' },
+  'YL26-XKDQ-95G3-V23G-XJ0M': { label: 'Yıllık #249', type: 'annual', expiry: '2027-05-02' },
+  'YL26-QVIN-DH4S-PFDR-WB2S': { label: 'Yıllık #250', type: 'annual', expiry: '2027-05-02' },
+  'YL26-EREV-361X-SNBT-I22N': { label: 'Yıllık #251', type: 'annual', expiry: '2027-05-02' },
+  'YL26-V01Z-DERI-4K5O-GZ2U': { label: 'Yıllık #252', type: 'annual', expiry: '2027-05-02' },
+  'YL26-EAXY-LNFX-J4PN-JY1O': { label: 'Yıllık #253', type: 'annual', expiry: '2027-05-02' },
+  'YL26-2RNT-JLMZ-04X0-QZFH': { label: 'Yıllık #254', type: 'annual', expiry: '2027-05-02' },
+  'YL26-OMTZ-ZF8A-DF7P-CHCB': { label: 'Yıllık #255', type: 'annual', expiry: '2027-05-02' },
+  'YL26-N9WS-ZV83-XPHX-2KBV': { label: 'Yıllık #256', type: 'annual', expiry: '2027-05-02' },
+  'YL26-SIGB-IAF9-2MOV-S0CD': { label: 'Yıllık #257', type: 'annual', expiry: '2027-05-02' },
+  'YL26-K36M-8JVH-7UJO-DCK8': { label: 'Yıllık #258', type: 'annual', expiry: '2027-05-02' },
+  'YL26-2853-UY8U-118Q-QVAE': { label: 'Yıllık #259', type: 'annual', expiry: '2027-05-02' },
+  'YL26-CW9Y-IL8S-A3ID-Y3C7': { label: 'Yıllık #260', type: 'annual', expiry: '2027-05-02' },
+  'YL26-RM6J-8Y6R-H05H-HIWF': { label: 'Yıllık #261', type: 'annual', expiry: '2027-05-02' },
+  'YL26-D7YX-W1TB-RWR9-65R9': { label: 'Yıllık #262', type: 'annual', expiry: '2027-05-02' },
+  'YL26-6KHU-B2RT-SOYG-9ZQY': { label: 'Yıllık #263', type: 'annual', expiry: '2027-05-02' },
+  'YL26-AHUL-WJTI-QWNR-HZN4': { label: 'Yıllık #264', type: 'annual', expiry: '2027-05-02' },
+  'YL26-KGEU-IDJI-PNF8-F3GR': { label: 'Yıllık #265', type: 'annual', expiry: '2027-05-02' },
+  'YL26-94SZ-2KUU-OYC3-RWQM': { label: 'Yıllık #266', type: 'annual', expiry: '2027-05-02' },
+  'YL26-MU7J-AE58-HUXG-2MYR': { label: 'Yıllık #267', type: 'annual', expiry: '2027-05-02' },
+  'YL26-06NK-WFG3-MWU4-CFIL': { label: 'Yıllık #268', type: 'annual', expiry: '2027-05-02' },
+  'YL26-KJXJ-Q5NV-8OGA-0X7Z': { label: 'Yıllık #269', type: 'annual', expiry: '2027-05-02' },
+  'YL26-CGDC-5TAO-1CJF-X5LI': { label: 'Yıllık #270', type: 'annual', expiry: '2027-05-02' },
+  'YL26-KWE4-BX4L-R9TJ-Q8ZG': { label: 'Yıllık #271', type: 'annual', expiry: '2027-05-02' },
+  'YL26-VWWU-SXLM-T2PN-JKA3': { label: 'Yıllık #272', type: 'annual', expiry: '2027-05-02' },
+  'YL26-4MQA-78RA-PKIA-NOUO': { label: 'Yıllık #273', type: 'annual', expiry: '2027-05-02' },
+  'YL26-F0ON-JPI1-63YK-03O4': { label: 'Yıllık #274', type: 'annual', expiry: '2027-05-02' },
+  'YL26-GKWW-JWGA-BTGD-JZ0I': { label: 'Yıllık #275', type: 'annual', expiry: '2027-05-02' },
+  'YL26-FRML-29Q2-L48C-1CQG': { label: 'Yıllık #276', type: 'annual', expiry: '2027-05-02' },
+  'YL26-433E-1I1P-0BQ1-S9RY': { label: 'Yıllık #277', type: 'annual', expiry: '2027-05-02' },
+  'YL26-LLWB-7SJW-H55H-EWLG': { label: 'Yıllık #278', type: 'annual', expiry: '2027-05-02' },
+  'YL26-JE2A-B2RV-NDFD-W79W': { label: 'Yıllık #279', type: 'annual', expiry: '2027-05-02' },
+  'YL26-CXZ2-EI92-12PG-YME6': { label: 'Yıllık #280', type: 'annual', expiry: '2027-05-02' },
+  'YL26-RPKZ-GGM0-J36T-CFKJ': { label: 'Yıllık #281', type: 'annual', expiry: '2027-05-02' },
+  'YL26-NAWN-GA41-IZXT-NSRT': { label: 'Yıllık #282', type: 'annual', expiry: '2027-05-02' },
+  'YL26-WLXD-SC4E-5HRD-U4XS': { label: 'Yıllık #283', type: 'annual', expiry: '2027-05-02' },
+  'YL26-ZJNV-C7HR-6C2C-U7ON': { label: 'Yıllık #284', type: 'annual', expiry: '2027-05-02' },
+  'YL26-Z3JB-CK88-D0TG-SIWG': { label: 'Yıllık #285', type: 'annual', expiry: '2027-05-02' },
+  'YL26-0ODW-MQX5-GGOM-F9PM': { label: 'Yıllık #286', type: 'annual', expiry: '2027-05-02' },
+  'YL26-L9LN-1P0V-UH17-J8QO': { label: 'Yıllık #287', type: 'annual', expiry: '2027-05-02' },
+  'YL26-09VS-9KKH-4A3Y-JTU7': { label: 'Yıllık #288', type: 'annual', expiry: '2027-05-02' },
+  'YL26-FBME-NUI3-DO70-02G3': { label: 'Yıllık #289', type: 'annual', expiry: '2027-05-02' },
+  'YL26-YU6V-K0UC-C1M3-O55I': { label: 'Yıllık #290', type: 'annual', expiry: '2027-05-02' },
+  'YL26-XVA1-NKBT-FSHB-0OQV': { label: 'Yıllık #291', type: 'annual', expiry: '2027-05-02' },
+  'YL26-SHKO-ECUB-ODS1-EEUR': { label: 'Yıllık #292', type: 'annual', expiry: '2027-05-02' },
+  'YL26-XHW0-IC1L-7DYP-MLVA': { label: 'Yıllık #293', type: 'annual', expiry: '2027-05-02' },
+  'YL26-K9W9-PFB3-HN14-EB87': { label: 'Yıllık #294', type: 'annual', expiry: '2027-05-02' },
+  'YL26-53AY-EQAH-THSJ-R0FZ': { label: 'Yıllık #295', type: 'annual', expiry: '2027-05-02' },
+  'YL26-AUXB-GK2W-BXAN-J4X5': { label: 'Yıllık #296', type: 'annual', expiry: '2027-05-02' },
+  'YL26-A5XI-N9DL-5TGS-Q7AI': { label: 'Yıllık #297', type: 'annual', expiry: '2027-05-02' },
+  'YL26-TMOF-MMWI-9S3W-563B': { label: 'Yıllık #298', type: 'annual', expiry: '2027-05-02' },
+  'YL26-TKF6-XDN8-WWII-F86L': { label: 'Yıllık #299', type: 'annual', expiry: '2027-05-02' },
+  'YL26-THET-25LZ-SE99-F77L': { label: 'Yıllık #300', type: 'annual', expiry: '2027-05-02' },
+  'YL26-U8EL-5015-OOP7-67J2': { label: 'Yıllık #301', type: 'annual', expiry: '2027-05-02' },
+  'YL26-DG1W-JUII-YMYR-SVZN': { label: 'Yıllık #302', type: 'annual', expiry: '2027-05-02' },
+  'YL26-4REG-B1AJ-O091-C795': { label: 'Yıllık #303', type: 'annual', expiry: '2027-05-02' },
+  'YL26-RLQI-OB0N-LW0V-S52S': { label: 'Yıllık #304', type: 'annual', expiry: '2027-05-02' },
+  'YL26-Q3B9-SO0U-SWBK-OK3Q': { label: 'Yıllık #305', type: 'annual', expiry: '2027-05-02' },
+  'YL26-PWBS-F3Q0-E27Z-EOQG': { label: 'Yıllık #306', type: 'annual', expiry: '2027-05-02' },
+  'YL26-VZHQ-JY62-ZEEQ-NSN2': { label: 'Yıllık #307', type: 'annual', expiry: '2027-05-02' },
+  'YL26-S8NN-16UX-F5GZ-PL1Q': { label: 'Yıllık #308', type: 'annual', expiry: '2027-05-02' },
+  'YL26-WEEH-WJQ4-TA5I-VROC': { label: 'Yıllık #309', type: 'annual', expiry: '2027-05-02' },
+  'YL26-VITW-U3BF-XB4Y-4K7B': { label: 'Yıllık #310', type: 'annual', expiry: '2027-05-02' },
+  'YL26-PGYV-YV2G-QU7D-KNNC': { label: 'Yıllık #311', type: 'annual', expiry: '2027-05-02' },
+  'YL26-PTKE-ZJSS-ZWD0-W9RY': { label: 'Yıllık #312', type: 'annual', expiry: '2027-05-02' },
+  'YL26-79KV-LS9M-EUSW-RGVZ': { label: 'Yıllık #313', type: 'annual', expiry: '2027-05-02' },
+  'YL26-9AAW-E429-OMUW-AHK2': { label: 'Yıllık #314', type: 'annual', expiry: '2027-05-02' },
+  'YL26-LSLA-YM0W-BGLM-Y62X': { label: 'Yıllık #315', type: 'annual', expiry: '2027-05-02' },
+  'YL26-RW6T-M2O0-4K0L-THY2': { label: 'Yıllık #316', type: 'annual', expiry: '2027-05-02' },
+  'YL26-5M8K-B9W4-UOV5-1ZLB': { label: 'Yıllık #317', type: 'annual', expiry: '2027-05-02' },
+  'YL26-ORIQ-8HKE-226P-ARSG': { label: 'Yıllık #318', type: 'annual', expiry: '2027-05-02' },
+  'YL26-70S1-F537-YE0Q-ZSA7': { label: 'Yıllık #319', type: 'annual', expiry: '2027-05-02' },
+  'YL26-YVDQ-BSXL-UL6L-GJLP': { label: 'Yıllık #320', type: 'annual', expiry: '2027-05-02' },
+  'YL26-EFJA-WSHM-LFZK-ICWM': { label: 'Yıllık #321', type: 'annual', expiry: '2027-05-02' },
+  'YL26-PEQY-DBPG-VV4Z-WL3Z': { label: 'Yıllık #322', type: 'annual', expiry: '2027-05-02' },
+  'YL26-YT91-QE37-QQYZ-QII4': { label: 'Yıllık #323', type: 'annual', expiry: '2027-05-02' },
+  'YL26-W6OZ-X25Q-BRMQ-G1VE': { label: 'Yıllık #324', type: 'annual', expiry: '2027-05-02' },
+  'YL26-D32L-X2TO-OWT9-NM3V': { label: 'Yıllık #325', type: 'annual', expiry: '2027-05-02' },
+  'YL26-2P2T-IXC7-URVQ-T3G8': { label: 'Yıllık #326', type: 'annual', expiry: '2027-05-02' },
+  'YL26-CD31-NRXD-356W-AFFT': { label: 'Yıllık #327', type: 'annual', expiry: '2027-05-02' },
+  'YL26-OUHY-LU6K-7P9M-DA9O': { label: 'Yıllık #328', type: 'annual', expiry: '2027-05-02' },
+  'YL26-EKNT-BZ3M-55IZ-OLNN': { label: 'Yıllık #329', type: 'annual', expiry: '2027-05-02' },
+  'YL26-TXRG-N74F-9YEC-AZRP': { label: 'Yıllık #330', type: 'annual', expiry: '2027-05-02' },
+  'YL26-9DXO-Q2VP-GSTQ-MGVU': { label: 'Yıllık #331', type: 'annual', expiry: '2027-05-02' },
+  'YL26-4ISO-TN9U-ZERY-F099': { label: 'Yıllık #332', type: 'annual', expiry: '2027-05-02' },
+  'YL26-2QC6-DR08-CW2L-BM2Q': { label: 'Yıllık #333', type: 'annual', expiry: '2027-05-02' },
+  'YL26-SQ0P-82KB-700U-CRGB': { label: 'Yıllık #334', type: 'annual', expiry: '2027-05-02' },
+  'YL26-93WK-CS4K-EK4A-EGVF': { label: 'Yıllık #335', type: 'annual', expiry: '2027-05-02' },
+  'YL26-Q3JZ-R25M-DF7F-R91I': { label: 'Yıllık #336', type: 'annual', expiry: '2027-05-02' },
+  'YL26-PWH0-MX1E-GOK0-1TNZ': { label: 'Yıllık #337', type: 'annual', expiry: '2027-05-02' },
+  'YL26-RF5A-7QY8-YB7W-8P74': { label: 'Yıllık #338', type: 'annual', expiry: '2027-05-02' },
+  'YL26-MJDX-O100-VHMY-GTY3': { label: 'Yıllık #339', type: 'annual', expiry: '2027-05-02' },
+  'YL26-ADDQ-HKGA-D7X4-8WZE': { label: 'Yıllık #340', type: 'annual', expiry: '2027-05-02' },
+  'YL26-4EX6-U86Z-JQ7W-7JP6': { label: 'Yıllık #341', type: 'annual', expiry: '2027-05-02' },
+  'YL26-1LFC-1NLC-8JPR-7VGR': { label: 'Yıllık #342', type: 'annual', expiry: '2027-05-02' },
+  'YL26-F1HX-6ZDC-UJQ6-FX7X': { label: 'Yıllık #343', type: 'annual', expiry: '2027-05-02' },
+  'YL26-JZ6U-S7RP-422T-A83R': { label: 'Yıllık #344', type: 'annual', expiry: '2027-05-02' },
+  'YL26-U7MY-OW8D-T8CQ-1XGB': { label: 'Yıllık #345', type: 'annual', expiry: '2027-05-02' },
+  'YL26-NGZ6-WMDW-0FGZ-VRCT': { label: 'Yıllık #346', type: 'annual', expiry: '2027-05-02' },
+  'YL26-LT4Q-9BC2-BE3Y-QY5F': { label: 'Yıllık #347', type: 'annual', expiry: '2027-05-02' },
+  'YL26-U7BF-XQ7B-ZEGB-L2QG': { label: 'Yıllık #348', type: 'annual', expiry: '2027-05-02' },
+  'YL26-V3DR-2H2P-39YL-9UE4': { label: 'Yıllık #349', type: 'annual', expiry: '2027-05-02' },
+  'YL26-21VM-EFOZ-TP7B-D4W1': { label: 'Yıllık #350', type: 'annual', expiry: '2027-05-02' },
+  'YL26-ARAG-DX5O-31YH-XSO7': { label: 'Yıllık #351', type: 'annual', expiry: '2027-05-02' },
+  'YL26-VBGR-8W2M-AIET-DN1T': { label: 'Yıllık #352', type: 'annual', expiry: '2027-05-02' },
+  'YL26-H1XJ-G2Y8-RGYB-XKPM': { label: 'Yıllık #353', type: 'annual', expiry: '2027-05-02' },
+  'YL26-21B0-7G2R-E6ZV-LHYL': { label: 'Yıllık #354', type: 'annual', expiry: '2027-05-02' },
+  'YL26-2LD0-5NHQ-R6F7-QNEZ': { label: 'Yıllık #355', type: 'annual', expiry: '2027-05-02' },
+  'YL26-W9HE-YCE4-QGM5-V2WW': { label: 'Yıllık #356', type: 'annual', expiry: '2027-05-02' },
+  'YL26-G84D-4R9V-4K00-ILU6': { label: 'Yıllık #357', type: 'annual', expiry: '2027-05-02' },
+  'YL26-VFUA-9BQ1-BTR2-3QIU': { label: 'Yıllık #358', type: 'annual', expiry: '2027-05-02' },
+  'YL26-A08E-KXDR-KZ40-AQ15': { label: 'Yıllık #359', type: 'annual', expiry: '2027-05-02' },
+  'YL26-O2NQ-W4C6-LBPJ-8T22': { label: 'Yıllık #360', type: 'annual', expiry: '2027-05-02' },
+  'YL26-C50B-8Y5D-NWNG-UCZH': { label: 'Yıllık #361', type: 'annual', expiry: '2027-05-02' },
+  'YL26-9IER-7U8H-0IMJ-YJCM': { label: 'Yıllık #362', type: 'annual', expiry: '2027-05-02' },
+  'YL26-RSEZ-YTKW-2837-C6QC': { label: 'Yıllık #363', type: 'annual', expiry: '2027-05-02' },
+  'YL26-6K8D-JZR5-SWK8-TEMP': { label: 'Yıllık #364', type: 'annual', expiry: '2027-05-02' },
+  'YL26-XKC5-I8XO-MXLV-Z4QK': { label: 'Yıllık #365', type: 'annual', expiry: '2027-05-02' },
+  'YL26-E2GJ-R81B-MQF7-ZK94': { label: 'Yıllık #366', type: 'annual', expiry: '2027-05-02' },
+  'YL26-YXFI-BLEJ-GUBL-MNTF': { label: 'Yıllık #367', type: 'annual', expiry: '2027-05-02' },
+  'YL26-K7OR-FQLA-09LZ-RK79': { label: 'Yıllık #368', type: 'annual', expiry: '2027-05-02' },
+  'YL26-UFU6-PY06-FTLO-4QDB': { label: 'Yıllık #369', type: 'annual', expiry: '2027-05-02' },
+  'YL26-XVH7-KATQ-YDSH-LV76': { label: 'Yıllık #370', type: 'annual', expiry: '2027-05-02' },
+  'YL26-MF4N-NKM9-5D0P-92K3': { label: 'Yıllık #371', type: 'annual', expiry: '2027-05-02' },
+  'YL26-8P6F-VDHR-59C8-1DO6': { label: 'Yıllık #372', type: 'annual', expiry: '2027-05-02' },
+  'YL26-OUZ1-EGNT-B34K-UQAA': { label: 'Yıllık #373', type: 'annual', expiry: '2027-05-02' },
+  'YL26-J84R-X6PR-YIEJ-9C0U': { label: 'Yıllık #374', type: 'annual', expiry: '2027-05-02' },
+  'YL26-U5WR-YESU-4FCL-5EFJ': { label: 'Yıllık #375', type: 'annual', expiry: '2027-05-02' },
+  'YL26-P6MK-T7S1-GD1T-53YK': { label: 'Yıllık #376', type: 'annual', expiry: '2027-05-02' },
+  'YL26-YYDU-3ASN-RM6D-FHG6': { label: 'Yıllık #377', type: 'annual', expiry: '2027-05-02' },
+  'YL26-W3ST-T1EQ-C37R-LN36': { label: 'Yıllık #378', type: 'annual', expiry: '2027-05-02' },
+  'YL26-V1MZ-B3I4-FIEE-CY2C': { label: 'Yıllık #379', type: 'annual', expiry: '2027-05-02' },
+  'YL26-11BD-2SCE-JCY1-27H6': { label: 'Yıllık #380', type: 'annual', expiry: '2027-05-02' },
+  'YL26-GMD4-78MF-S0IU-DUAH': { label: 'Yıllık #381', type: 'annual', expiry: '2027-05-02' },
+  'YL26-GK6T-9DHS-ZNVP-8GMN': { label: 'Yıllık #382', type: 'annual', expiry: '2027-05-02' },
+  'YL26-HIE9-EDE1-ZUBL-EKVL': { label: 'Yıllık #383', type: 'annual', expiry: '2027-05-02' },
+  'YL26-9PTK-4GC4-RYG9-RDPX': { label: 'Yıllık #384', type: 'annual', expiry: '2027-05-02' },
+  'YL26-DFOV-D79C-9MV9-E40K': { label: 'Yıllık #385', type: 'annual', expiry: '2027-05-02' },
+  'YL26-ZUJ2-XORV-ORK1-DJRW': { label: 'Yıllık #386', type: 'annual', expiry: '2027-05-02' },
+  'YL26-EDBC-Y8NY-FWDC-112H': { label: 'Yıllık #387', type: 'annual', expiry: '2027-05-02' },
+  'YL26-XRJM-4T8B-P6NL-NQBU': { label: 'Yıllık #388', type: 'annual', expiry: '2027-05-02' },
+  'YL26-4KZR-EZRD-YXYU-R4SO': { label: 'Yıllık #389', type: 'annual', expiry: '2027-05-02' },
+  'YL26-R8WM-9LBB-4M0A-6MDM': { label: 'Yıllık #390', type: 'annual', expiry: '2027-05-02' },
+  'YL26-MMXI-XV6C-KMAL-Q5U6': { label: 'Yıllık #391', type: 'annual', expiry: '2027-05-02' },
+  'YL26-JZV9-NOU3-DYMS-1MWN': { label: 'Yıllık #392', type: 'annual', expiry: '2027-05-02' },
+  'YL26-PR42-4TKB-9OI0-D4DM': { label: 'Yıllık #393', type: 'annual', expiry: '2027-05-02' },
+  'YL26-C2RH-2XK2-PTHO-WQ1G': { label: 'Yıllık #394', type: 'annual', expiry: '2027-05-02' },
+  'YL26-AZ5U-H80Q-7TW1-PUWS': { label: 'Yıllık #395', type: 'annual', expiry: '2027-05-02' },
+  'YL26-NFFY-KPL3-CHO3-XJVO': { label: 'Yıllık #396', type: 'annual', expiry: '2027-05-02' },
+  'YL26-EGI3-QUPX-BFEJ-2XG4': { label: 'Yıllık #397', type: 'annual', expiry: '2027-05-02' },
+  'YL26-8RA4-DV56-ONXD-70FE': { label: 'Yıllık #398', type: 'annual', expiry: '2027-05-02' },
+  'YL26-07S3-87J5-IE3L-VO0I': { label: 'Yıllık #399', type: 'annual', expiry: '2027-05-02' },
+  'YL26-PFG8-PJVR-N8LP-Y857': { label: 'Yıllık #400', type: 'annual', expiry: '2027-05-02' },
+  'YL26-NZ3A-8V4X-7Y2I-TL8N': { label: 'Yıllık #401', type: 'annual', expiry: '2027-05-02' },
+  'YL26-3E54-N6O9-JD3I-H66W': { label: 'Yıllık #402', type: 'annual', expiry: '2027-05-02' },
+  'YL26-51OB-537Q-O4Z5-33ZS': { label: 'Yıllık #403', type: 'annual', expiry: '2027-05-02' },
+  'YL26-MV30-QABX-W2EO-WLCF': { label: 'Yıllık #404', type: 'annual', expiry: '2027-05-02' },
+  'YL26-S831-4Y2L-R0JY-32HO': { label: 'Yıllık #405', type: 'annual', expiry: '2027-05-02' },
+  'YL26-G585-I87X-W69H-ZGOP': { label: 'Yıllık #406', type: 'annual', expiry: '2027-05-02' },
+  'YL26-JDN8-EZP7-QYEZ-G52K': { label: 'Yıllık #407', type: 'annual', expiry: '2027-05-02' },
+  'YL26-RE4V-9KYP-OFKJ-W6NY': { label: 'Yıllık #408', type: 'annual', expiry: '2027-05-02' },
+  'YL26-QAEL-YYZZ-0JDC-LI69': { label: 'Yıllık #409', type: 'annual', expiry: '2027-05-02' },
+  'YL26-78V0-BJWK-ON8U-UJS7': { label: 'Yıllık #410', type: 'annual', expiry: '2027-05-02' },
+  'YL26-5ELT-FEBE-5407-K5W1': { label: 'Yıllık #411', type: 'annual', expiry: '2027-05-02' },
+  'YL26-JL6L-91F4-X2BF-IBJZ': { label: 'Yıllık #412', type: 'annual', expiry: '2027-05-02' },
+  'YL26-P97B-MZRR-45ED-5GGS': { label: 'Yıllık #413', type: 'annual', expiry: '2027-05-02' },
+  'YL26-J6VV-8SUO-C1Y5-AYYO': { label: 'Yıllık #414', type: 'annual', expiry: '2027-05-02' },
+  'YL26-V84F-C3XQ-8VA8-X8L0': { label: 'Yıllık #415', type: 'annual', expiry: '2027-05-02' },
+  'YL26-08UH-BXLB-C8NO-G85D': { label: 'Yıllık #416', type: 'annual', expiry: '2027-05-02' },
+  'YL26-4F2K-1XER-P3LY-EX3S': { label: 'Yıllık #417', type: 'annual', expiry: '2027-05-02' },
+  'YL26-R5RU-P13W-PPBM-QIYF': { label: 'Yıllık #418', type: 'annual', expiry: '2027-05-02' },
+  'YL26-RWSK-P6RF-E64S-KBCB': { label: 'Yıllık #419', type: 'annual', expiry: '2027-05-02' },
+  'YL26-DPDX-UJJC-SEXG-GOC5': { label: 'Yıllık #420', type: 'annual', expiry: '2027-05-02' },
+  'YL26-KVQY-WJ85-GG0V-5DTA': { label: 'Yıllık #421', type: 'annual', expiry: '2027-05-02' },
+  'YL26-EGRY-58VR-W9MY-YOKE': { label: 'Yıllık #422', type: 'annual', expiry: '2027-05-02' },
+  'YL26-AEA8-4HXX-PW2G-KQRA': { label: 'Yıllık #423', type: 'annual', expiry: '2027-05-02' },
+  'YL26-FFZ8-Q4VH-U4BA-WZ94': { label: 'Yıllık #424', type: 'annual', expiry: '2027-05-02' },
+  'YL26-0VTK-RRVW-Y3RZ-TPLC': { label: 'Yıllık #425', type: 'annual', expiry: '2027-05-02' },
+  'YL26-6PRR-7MZA-KGMI-H6MV': { label: 'Yıllık #426', type: 'annual', expiry: '2027-05-02' },
+  'YL26-4XEK-Z83Y-0224-WK0Y': { label: 'Yıllık #427', type: 'annual', expiry: '2027-05-02' },
+  'YL26-EHVD-O9KH-BA5M-F36B': { label: 'Yıllık #428', type: 'annual', expiry: '2027-05-02' },
+  'YL26-CPWE-IJMM-B5JF-YSYZ': { label: 'Yıllık #429', type: 'annual', expiry: '2027-05-02' },
+  'YL26-7PQ4-DDV2-83BD-W56F': { label: 'Yıllık #430', type: 'annual', expiry: '2027-05-02' },
+  'YL26-KPS0-DXME-4PO1-I3MS': { label: 'Yıllık #431', type: 'annual', expiry: '2027-05-02' },
+  'YL26-DN1M-XF1P-I2OO-Q42N': { label: 'Yıllık #432', type: 'annual', expiry: '2027-05-02' },
+  'YL26-BFA3-7DL9-FC1X-X6CW': { label: 'Yıllık #433', type: 'annual', expiry: '2027-05-02' },
+  'YL26-ZXSK-OYTK-06AK-T7ZQ': { label: 'Yıllık #434', type: 'annual', expiry: '2027-05-02' },
+  'YL26-HT2X-Z52O-HKBM-00E9': { label: 'Yıllık #435', type: 'annual', expiry: '2027-05-02' },
+  'YL26-KDTS-1FB2-VI10-9DCN': { label: 'Yıllık #436', type: 'annual', expiry: '2027-05-02' },
+  'YL26-WMBX-EK0Q-929U-6WTV': { label: 'Yıllık #437', type: 'annual', expiry: '2027-05-02' },
+  'YL26-MK2Z-YZSI-LU3N-DZ3C': { label: 'Yıllık #438', type: 'annual', expiry: '2027-05-02' },
+  'YL26-C5RQ-NSVS-OJRP-P7R9': { label: 'Yıllık #439', type: 'annual', expiry: '2027-05-02' },
+  'YL26-3FEZ-EZ5E-HR07-N8VO': { label: 'Yıllık #440', type: 'annual', expiry: '2027-05-02' },
+  'YL26-EUBF-N9KR-2FVB-66H3': { label: 'Yıllık #441', type: 'annual', expiry: '2027-05-02' },
+  'YL26-REM5-PUU6-2RZV-1SQQ': { label: 'Yıllık #442', type: 'annual', expiry: '2027-05-02' },
+  'YL26-Q5L2-XOIO-T860-X5ZU': { label: 'Yıllık #443', type: 'annual', expiry: '2027-05-02' },
+  'YL26-2ZUE-UGWU-BUGR-6E7G': { label: 'Yıllık #444', type: 'annual', expiry: '2027-05-02' },
+  'YL26-A2IZ-5P3V-OB5A-PO4L': { label: 'Yıllık #445', type: 'annual', expiry: '2027-05-02' },
+  'YL26-JEDG-FJDL-OGWL-ACOL': { label: 'Yıllık #446', type: 'annual', expiry: '2027-05-02' },
+  'YL26-OLN3-EH1V-R1NE-CQOR': { label: 'Yıllık #447', type: 'annual', expiry: '2027-05-02' },
+  'YL26-OI5J-8YIT-2KOD-WH8N': { label: 'Yıllık #448', type: 'annual', expiry: '2027-05-02' },
+  'YL26-92TP-6QAQ-3K8A-7RV4': { label: 'Yıllık #449', type: 'annual', expiry: '2027-05-02' },
+  'YL26-NMWV-SB0U-KOEF-UKPV': { label: 'Yıllık #450', type: 'annual', expiry: '2027-05-02' },
+  'YL26-8LYM-J1QI-9MQV-AYXA': { label: 'Yıllık #451', type: 'annual', expiry: '2027-05-02' },
+  'YL26-R6YO-6Z1T-2XCB-3YYM': { label: 'Yıllık #452', type: 'annual', expiry: '2027-05-02' },
+  'YL26-33MG-1ZAQ-7QHA-K7MD': { label: 'Yıllık #453', type: 'annual', expiry: '2027-05-02' },
+  'YL26-WKZI-RNK6-ZHH3-O5UR': { label: 'Yıllık #454', type: 'annual', expiry: '2027-05-02' },
+  'YL26-TXUY-UCEC-JUIS-2GY9': { label: 'Yıllık #455', type: 'annual', expiry: '2027-05-02' },
+  'YL26-YTJU-Q7X7-B7P9-JYQN': { label: 'Yıllık #456', type: 'annual', expiry: '2027-05-02' },
+  'YL26-15IK-PQAH-CUA0-9PCI': { label: 'Yıllık #457', type: 'annual', expiry: '2027-05-02' },
+  'YL26-FLWD-R3VW-MJDI-MBM2': { label: 'Yıllık #458', type: 'annual', expiry: '2027-05-02' },
+  'YL26-71W1-WUDC-BL4C-E7PK': { label: 'Yıllık #459', type: 'annual', expiry: '2027-05-02' },
+  'YL26-WCYU-KND1-IVXA-N25W': { label: 'Yıllık #460', type: 'annual', expiry: '2027-05-02' },
+  'YL26-M72Q-LGDV-C2GU-WJP0': { label: 'Yıllık #461', type: 'annual', expiry: '2027-05-02' },
+  'YL26-QI2C-LP81-L51F-LMNA': { label: 'Yıllık #462', type: 'annual', expiry: '2027-05-02' },
+  'YL26-VYCS-44PH-H62M-YZ9V': { label: 'Yıllık #463', type: 'annual', expiry: '2027-05-02' },
+  'YL26-LU8W-PFQ2-BHAI-IWI0': { label: 'Yıllık #464', type: 'annual', expiry: '2027-05-02' },
+  'YL26-8L0H-G9NC-BEKG-V1BB': { label: 'Yıllık #465', type: 'annual', expiry: '2027-05-02' },
+  'YL26-HG5Z-MTGA-46AY-N2D7': { label: 'Yıllık #466', type: 'annual', expiry: '2027-05-02' },
+  'YL26-KI3X-7995-5CF7-2GNN': { label: 'Yıllık #467', type: 'annual', expiry: '2027-05-02' },
+  'YL26-V9IB-WGT2-LB25-485H': { label: 'Yıllık #468', type: 'annual', expiry: '2027-05-02' },
+  'YL26-CQXC-S1XS-RQLN-ZZRJ': { label: 'Yıllık #469', type: 'annual', expiry: '2027-05-02' },
+  'YL26-O7VB-HH5O-L5U7-NTED': { label: 'Yıllık #470', type: 'annual', expiry: '2027-05-02' },
+  'YL26-QMVQ-WPQO-2LNG-IXMC': { label: 'Yıllık #471', type: 'annual', expiry: '2027-05-02' },
+  'YL26-4SX2-7DCB-HHLK-3YJZ': { label: 'Yıllık #472', type: 'annual', expiry: '2027-05-02' },
+  'YL26-9910-6AK3-2OOU-XQS1': { label: 'Yıllık #473', type: 'annual', expiry: '2027-05-02' },
+  'YL26-FOI0-RS21-0Q2L-G1ZH': { label: 'Yıllık #474', type: 'annual', expiry: '2027-05-02' },
+  'YL26-QUNU-E7A3-4MPY-O2TL': { label: 'Yıllık #475', type: 'annual', expiry: '2027-05-02' },
+  'YL26-A27F-8LWV-V59H-OTGD': { label: 'Yıllık #476', type: 'annual', expiry: '2027-05-02' },
+  'YL26-UQ6D-DTBY-RGC8-KIXC': { label: 'Yıllık #477', type: 'annual', expiry: '2027-05-02' },
+  'YL26-CSG4-OFDT-RC85-EHPZ': { label: 'Yıllık #478', type: 'annual', expiry: '2027-05-02' },
+  'YL26-RV7V-SYJA-FCO3-S65Q': { label: 'Yıllık #479', type: 'annual', expiry: '2027-05-02' },
+  'YL26-U0K5-QZZK-W3GI-60Q6': { label: 'Yıllık #480', type: 'annual', expiry: '2027-05-02' },
+  'YL26-GUO8-I5JW-K6Z0-HR9T': { label: 'Yıllık #481', type: 'annual', expiry: '2027-05-02' },
+  'YL26-9CD1-LQJS-QCZ0-N04O': { label: 'Yıllık #482', type: 'annual', expiry: '2027-05-02' },
+  'YL26-AE7L-0RCT-I8F3-4GAD': { label: 'Yıllık #483', type: 'annual', expiry: '2027-05-02' },
+  'YL26-KTOC-1YFM-HBYH-Z43X': { label: 'Yıllık #484', type: 'annual', expiry: '2027-05-02' },
+  'YL26-Z6OL-BA11-7NID-P9MG': { label: 'Yıllık #485', type: 'annual', expiry: '2027-05-02' },
+  'YL26-YH52-3GGO-DLUG-HT7E': { label: 'Yıllık #486', type: 'annual', expiry: '2027-05-02' },
+  'YL26-HMGO-LOQC-3XNC-HKV9': { label: 'Yıllık #487', type: 'annual', expiry: '2027-05-02' },
+  'YL26-DT94-G8V9-ZY9Y-LW5L': { label: 'Yıllık #488', type: 'annual', expiry: '2027-05-02' },
+  'YL26-4RMV-VNXI-V9IW-6L01': { label: 'Yıllık #489', type: 'annual', expiry: '2027-05-02' },
+  'YL26-WCNK-FHB7-V80L-KX1S': { label: 'Yıllık #490', type: 'annual', expiry: '2027-05-02' },
+  'YL26-9XKA-4LIT-6XIY-ZVNL': { label: 'Yıllık #491', type: 'annual', expiry: '2027-05-02' },
+  'YL26-PA5C-GWFH-DV37-IC0L': { label: 'Yıllık #492', type: 'annual', expiry: '2027-05-02' },
+  'YL26-ZIGI-KQWJ-2C9O-GPS0': { label: 'Yıllık #493', type: 'annual', expiry: '2027-05-02' },
+  'YL26-132A-N417-VF0J-QQNV': { label: 'Yıllık #494', type: 'annual', expiry: '2027-05-02' },
+  'YL26-CEQF-GAS0-R778-NRXV': { label: 'Yıllık #495', type: 'annual', expiry: '2027-05-02' },
+  'YL26-OB7N-UGPJ-60SR-YZX7': { label: 'Yıllık #496', type: 'annual', expiry: '2027-05-02' },
+  'YL26-0IB3-WYZX-JQYJ-V84A': { label: 'Yıllık #497', type: 'annual', expiry: '2027-05-02' },
+  'YL26-1X7O-V6SG-P3JK-8XNL': { label: 'Yıllık #498', type: 'annual', expiry: '2027-05-02' },
+  'YL26-O50D-W1MF-07OL-93AC': { label: 'Yıllık #499', type: 'annual', expiry: '2027-05-02' },
+  'YL26-ZSX0-GNZH-G8Q3-GCG1': { label: 'Yıllık #500', type: 'annual', expiry: '2027-05-02' },
+  'TK26-J6OW-W5FK-NJMV-RYDC': { label: 'Tek Kullanım #1', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-1AU9-DSAV-917R-MPN6': { label: 'Tek Kullanım #2', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-937X-NCML-DQZ0-5EV5': { label: 'Tek Kullanım #3', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-KZ3N-WXRO-G983-AMB3': { label: 'Tek Kullanım #4', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-LPVO-WCP7-7946-0KHF': { label: 'Tek Kullanım #5', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-SU4S-E2KY-T5GQ-EXIH': { label: 'Tek Kullanım #6', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-1XDP-ZF76-1HJR-6EET': { label: 'Tek Kullanım #7', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-0DY5-71VX-NZ0N-XU43': { label: 'Tek Kullanım #8', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-IEDD-070E-N48U-ACT4': { label: 'Tek Kullanım #9', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-9LNY-2SVH-OTQF-74RQ': { label: 'Tek Kullanım #10', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-VFX2-ZVL9-E9ZR-3RZN': { label: 'Tek Kullanım #11', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-9L3H-03ZB-5GRO-9X49': { label: 'Tek Kullanım #12', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-TMY9-1OTK-ZH4O-E1U2': { label: 'Tek Kullanım #13', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-4ZQF-EZKF-H00A-0UY9': { label: 'Tek Kullanım #14', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-F8P4-7D9G-B9XV-8WOB': { label: 'Tek Kullanım #15', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-IRY8-XNY2-X15X-JXNE': { label: 'Tek Kullanım #16', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-CRYS-AUUJ-02GR-XPUD': { label: 'Tek Kullanım #17', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-C62G-3AUT-3RSV-Z2E1': { label: 'Tek Kullanım #18', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-86GV-GT2E-EHFU-4B9S': { label: 'Tek Kullanım #19', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-NTP8-AK8S-2XQU-ZS9M': { label: 'Tek Kullanım #20', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-THD3-IGK3-8VHM-EWCJ': { label: 'Tek Kullanım #21', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-N6OC-JPZT-C09Z-GNX3': { label: 'Tek Kullanım #22', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-VPF9-PAVC-EDTC-XNMJ': { label: 'Tek Kullanım #23', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-5IAN-8ND7-G0L3-RTZ5': { label: 'Tek Kullanım #24', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-TV6G-8OM0-8TV4-REAS': { label: 'Tek Kullanım #25', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-FEN0-B09Z-IVZG-92SJ': { label: 'Tek Kullanım #26', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-P753-K48O-LDC0-8FC0': { label: 'Tek Kullanım #27', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-TR58-PS0R-S95Z-OW60': { label: 'Tek Kullanım #28', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-ZZ0I-0835-TVV8-Y5SI': { label: 'Tek Kullanım #29', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-C4S8-PNNE-6IT1-EKKH': { label: 'Tek Kullanım #30', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-0UHK-7X3B-QWRM-WLMA': { label: 'Tek Kullanım #31', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-6GMD-RDSF-ERFX-IOKP': { label: 'Tek Kullanım #32', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-G3DP-4FMP-M5HG-BO06': { label: 'Tek Kullanım #33', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-FHRX-JPT2-ZL15-S74N': { label: 'Tek Kullanım #34', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-DDAF-S1IY-M90P-KR1I': { label: 'Tek Kullanım #35', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-FSI1-59I3-HZ3Z-SG9V': { label: 'Tek Kullanım #36', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-WIEB-97PW-DBOL-WIMR': { label: 'Tek Kullanım #37', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-SXKJ-KMPL-BBB0-HQ6D': { label: 'Tek Kullanım #38', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-G8NK-DAT5-L0N2-TNXH': { label: 'Tek Kullanım #39', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-N5E0-EV6X-GZ7C-TM09': { label: 'Tek Kullanım #40', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-HZBG-TJ54-696Q-Z6CP': { label: 'Tek Kullanım #41', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-7SAV-ZEBU-2Y0O-Y58F': { label: 'Tek Kullanım #42', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-1N2O-JGFH-Z52Q-ZSKH': { label: 'Tek Kullanım #43', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-ZTGB-IBF5-7J2X-I3TA': { label: 'Tek Kullanım #44', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-MVNC-ZTZO-WLC3-3H8G': { label: 'Tek Kullanım #45', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-8T92-2D0N-X5WT-3HJU': { label: 'Tek Kullanım #46', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-31FI-0N6D-GG5G-R0XA': { label: 'Tek Kullanım #47', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-FGOV-CCI6-8DS0-3VNA': { label: 'Tek Kullanım #48', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-31XB-IDFW-A88D-0MZH': { label: 'Tek Kullanım #49', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-RUPF-LFCY-WE3D-KS4F': { label: 'Tek Kullanım #50', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-6APF-XI5N-53EG-DD8M': { label: 'Tek Kullanım #51', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-WE77-6VGT-VYFY-K3MD': { label: 'Tek Kullanım #52', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-6X73-ZCA7-FXLO-Z2RC': { label: 'Tek Kullanım #53', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-U8KD-9GNL-PYO2-M2XI': { label: 'Tek Kullanım #54', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-PRTT-3NUP-UY0Z-IA9A': { label: 'Tek Kullanım #55', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-U87C-M453-KF48-6I3C': { label: 'Tek Kullanım #56', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-E8ZN-A8NZ-XC45-BNCC': { label: 'Tek Kullanım #57', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-U3FG-00ZK-OM2Z-KF5B': { label: 'Tek Kullanım #58', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-1SA3-Y5T3-7SZP-F9S9': { label: 'Tek Kullanım #59', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-EHWH-G0U4-3QLX-3F2X': { label: 'Tek Kullanım #60', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-HDCV-4BKT-CV1L-TWBJ': { label: 'Tek Kullanım #61', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-9UU2-BL7A-MKOH-109Z': { label: 'Tek Kullanım #62', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-DO0D-3FVN-V4KF-Q5DZ': { label: 'Tek Kullanım #63', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-53X1-F8S0-X7M2-MM4P': { label: 'Tek Kullanım #64', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-61NH-VCFW-R2F5-T82D': { label: 'Tek Kullanım #65', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-DL7F-KNDG-1JRJ-5XFE': { label: 'Tek Kullanım #66', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-UB4O-47EN-48NY-SJ5Y': { label: 'Tek Kullanım #67', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-WX0I-3A4K-FOCN-QDQX': { label: 'Tek Kullanım #68', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-6QD0-771H-LL9R-ZRKB': { label: 'Tek Kullanım #69', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-FQXL-BVN7-NPRB-58YJ': { label: 'Tek Kullanım #70', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-WDCO-KZ5S-YJ3D-6M1F': { label: 'Tek Kullanım #71', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-MPRY-FZMY-OA2V-CYWL': { label: 'Tek Kullanım #72', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-9700-LFQF-5E8O-SAQ3': { label: 'Tek Kullanım #73', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-EQ8D-H9PT-FNM8-8UA3': { label: 'Tek Kullanım #74', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-A6S5-ZXQO-MTS1-EGPG': { label: 'Tek Kullanım #75', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-VTN4-YPKW-7493-DXWO': { label: 'Tek Kullanım #76', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-R17D-PUBK-PIQN-HQE8': { label: 'Tek Kullanım #77', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-6O3Z-0ANI-K5J4-2OI6': { label: 'Tek Kullanım #78', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-OAFN-33VM-89I9-GX32': { label: 'Tek Kullanım #79', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-UEW9-G6SP-D2SW-24WJ': { label: 'Tek Kullanım #80', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-T8HD-PWVB-Z7CN-0EQW': { label: 'Tek Kullanım #81', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-MI6K-TI22-1XJ7-WWUD': { label: 'Tek Kullanım #82', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-QVDK-6DRN-4ORA-C8CY': { label: 'Tek Kullanım #83', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-NL63-GAGU-VB99-RWTF': { label: 'Tek Kullanım #84', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-07GB-ASF5-EHLH-07JR': { label: 'Tek Kullanım #85', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-8MTK-0RSO-GGY5-KOV1': { label: 'Tek Kullanım #86', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-L28R-5P03-WVPU-NWCG': { label: 'Tek Kullanım #87', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-BSVK-3X8M-BGL2-MCXN': { label: 'Tek Kullanım #88', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-2ELA-LQ26-UNVS-DKV5': { label: 'Tek Kullanım #89', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-4C6P-1LLH-2R9P-EGLN': { label: 'Tek Kullanım #90', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-UKX4-96K4-O67B-XCD2': { label: 'Tek Kullanım #91', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-0J1O-ULWO-ZQ48-ENWB': { label: 'Tek Kullanım #92', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-BADL-YPGG-6N69-75J2': { label: 'Tek Kullanım #93', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-D8CL-W3JG-EQE5-158O': { label: 'Tek Kullanım #94', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-QESU-X9L0-IJKC-U5X0': { label: 'Tek Kullanım #95', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-HC8C-AH3G-DHVS-41LQ': { label: 'Tek Kullanım #96', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-FS6H-N95S-2GKF-L5XF': { label: 'Tek Kullanım #97', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-50I6-GBXQ-J7DP-FSSB': { label: 'Tek Kullanım #98', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-JDX0-PKOV-TRPY-X8HB': { label: 'Tek Kullanım #99', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-BJCD-IWZO-D05J-H2MK': { label: 'Tek Kullanım #100', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-V0DS-ZRK6-ILCG-6FAR': { label: 'Tek Kullanım #101', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-MGJC-Y4V8-URID-3U94': { label: 'Tek Kullanım #102', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-SGFD-K0Q0-9JRN-AMZ6': { label: 'Tek Kullanım #103', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-146V-EY0A-94XF-RI09': { label: 'Tek Kullanım #104', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-M0G8-W85Y-6Q8S-JY5O': { label: 'Tek Kullanım #105', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-P9LB-SMWP-Q82K-8RYQ': { label: 'Tek Kullanım #106', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-F8WX-KK2A-BKVB-LPXA': { label: 'Tek Kullanım #107', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-JMK4-X1FD-J9HV-CHRM': { label: 'Tek Kullanım #108', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-3WP8-DJKL-UYLU-YHET': { label: 'Tek Kullanım #109', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-KDUW-TN5P-EPL7-ZQPP': { label: 'Tek Kullanım #110', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-OAU8-P1WK-ISET-UK1O': { label: 'Tek Kullanım #111', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-OA35-QBB3-XMDK-RLC0': { label: 'Tek Kullanım #112', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-Y0BH-F0RI-Y4KL-9ARY': { label: 'Tek Kullanım #113', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-EAVE-DHR3-PCEO-934T': { label: 'Tek Kullanım #114', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-3Y4W-PWG3-XG0T-RKY8': { label: 'Tek Kullanım #115', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-RYOZ-DPPB-QUAK-X6WB': { label: 'Tek Kullanım #116', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-68Q0-J9M4-SMZO-CXMZ': { label: 'Tek Kullanım #117', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-MZ2K-1KO6-XNQX-U71S': { label: 'Tek Kullanım #118', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-EL8M-WOB4-FDD7-R193': { label: 'Tek Kullanım #119', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-0I6G-61PC-WE4C-1V47': { label: 'Tek Kullanım #120', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-LZN9-UHJP-KHF3-3GUW': { label: 'Tek Kullanım #121', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-YH36-MOTC-G06X-R3UR': { label: 'Tek Kullanım #122', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-MWUE-CPNC-C2KE-IVLI': { label: 'Tek Kullanım #123', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-77JZ-C58C-U47S-OCZD': { label: 'Tek Kullanım #124', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-Q7JB-MJM1-FT07-X5IC': { label: 'Tek Kullanım #125', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-86Z1-B98V-WCT8-JBBS': { label: 'Tek Kullanım #126', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-XPK4-8AB1-3T4Y-0TB1': { label: 'Tek Kullanım #127', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-ZPPE-P69N-GPCI-VI05': { label: 'Tek Kullanım #128', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-2U9A-Z3CE-GBMX-IKVR': { label: 'Tek Kullanım #129', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-ECJT-R0M6-HZ72-KXSJ': { label: 'Tek Kullanım #130', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-ZSB6-ZWKH-E9I0-HN3F': { label: 'Tek Kullanım #131', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-9ZXQ-ERBK-N3DK-VR5N': { label: 'Tek Kullanım #132', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-BHGP-BKTM-AV67-63V1': { label: 'Tek Kullanım #133', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-M3PP-00CD-NZY4-7QUU': { label: 'Tek Kullanım #134', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-SFN0-7EA2-8DIT-MOWN': { label: 'Tek Kullanım #135', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-X23V-EULJ-GQPQ-8R4H': { label: 'Tek Kullanım #136', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-C7JV-LCG1-J5EW-FWBE': { label: 'Tek Kullanım #137', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-BY4U-BZCZ-JJY4-MZVM': { label: 'Tek Kullanım #138', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-CPSI-LN3O-X5FL-2MOX': { label: 'Tek Kullanım #139', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-Q9WF-B76A-V3S2-SUMH': { label: 'Tek Kullanım #140', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-3B0N-9CC7-ISUT-P04S': { label: 'Tek Kullanım #141', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-BRSP-J4KI-I1NQ-0EI0': { label: 'Tek Kullanım #142', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-5NMS-6XVQ-PU3E-T1OV': { label: 'Tek Kullanım #143', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-EJKL-CP9U-W165-AEJT': { label: 'Tek Kullanım #144', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-70EB-PY9E-576M-OUZE': { label: 'Tek Kullanım #145', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-66VW-9B0M-QOQ4-KREG': { label: 'Tek Kullanım #146', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-167D-6VNX-NPSV-8DKM': { label: 'Tek Kullanım #147', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-U6U4-PLLG-F309-HSUW': { label: 'Tek Kullanım #148', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-DKEJ-P5K7-917X-FH41': { label: 'Tek Kullanım #149', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-A68T-2A3A-H7U0-S3KD': { label: 'Tek Kullanım #150', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-Z4PP-J590-EMC2-0LSJ': { label: 'Tek Kullanım #151', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-WS1Z-L7P7-2L4X-5BWA': { label: 'Tek Kullanım #152', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-EN7Y-JF30-KH58-40AC': { label: 'Tek Kullanım #153', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-UHGP-JNVW-RXGK-IKR2': { label: 'Tek Kullanım #154', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-OMRD-E51K-8LXE-QLEZ': { label: 'Tek Kullanım #155', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-Z1R2-ROIK-S62C-1JLO': { label: 'Tek Kullanım #156', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-PO6J-0M3L-OUFH-W8WL': { label: 'Tek Kullanım #157', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-VA02-DZ61-TXSN-HFT4': { label: 'Tek Kullanım #158', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-I26L-H07B-A7DO-RFKI': { label: 'Tek Kullanım #159', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-1IJE-2XE0-JDCZ-1OA3': { label: 'Tek Kullanım #160', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-VF02-GVLL-SAJH-JXQK': { label: 'Tek Kullanım #161', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-D8UR-6TIA-RONT-DI9O': { label: 'Tek Kullanım #162', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-INUX-L39D-G5RI-FWR0': { label: 'Tek Kullanım #163', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-UI1J-LMFL-UOAY-12TL': { label: 'Tek Kullanım #164', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-XLZS-49CD-ZN1F-0FP8': { label: 'Tek Kullanım #165', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-BPG2-R0TO-KPK7-YSWN': { label: 'Tek Kullanım #166', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-XFSH-WZSJ-Q77Z-4ES3': { label: 'Tek Kullanım #167', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-AOFC-9LGY-TLCQ-FMUI': { label: 'Tek Kullanım #168', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-W7J3-5VLW-OJTX-CF0K': { label: 'Tek Kullanım #169', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-JD2V-1L1V-J35Y-RG29': { label: 'Tek Kullanım #170', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-D2FF-5L6B-SPXL-SEUN': { label: 'Tek Kullanım #171', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-NRLS-T548-84Z4-UR2Y': { label: 'Tek Kullanım #172', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-UPMA-NQY0-HU97-NG0A': { label: 'Tek Kullanım #173', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-PSAL-DNJ7-VBJR-BZJW': { label: 'Tek Kullanım #174', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-8357-9WRR-513B-B6F0': { label: 'Tek Kullanım #175', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-5EP4-CWCD-T9GW-A44L': { label: 'Tek Kullanım #176', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-Z6V7-S7O4-YC3S-0DPJ': { label: 'Tek Kullanım #177', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-HSG0-4AJM-MUZU-QED0': { label: 'Tek Kullanım #178', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-GV81-2HNC-0I4X-6G1E': { label: 'Tek Kullanım #179', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-BZGF-LIG5-GKZJ-RUMX': { label: 'Tek Kullanım #180', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-QW3B-4NTH-ZM32-HZS3': { label: 'Tek Kullanım #181', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-2D1J-QBEX-GFVN-NVBZ': { label: 'Tek Kullanım #182', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-W5AP-MXD6-LQGA-3QUP': { label: 'Tek Kullanım #183', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-O4JN-MYK8-516S-P18O': { label: 'Tek Kullanım #184', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-BS75-87H9-1EL8-8L12': { label: 'Tek Kullanım #185', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-QFAF-5KCI-HDIY-4NRM': { label: 'Tek Kullanım #186', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-QYZ6-Y3Z1-DE1E-1630': { label: 'Tek Kullanım #187', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-POCR-0VHV-1NM3-V16X': { label: 'Tek Kullanım #188', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-EGHP-MXPK-N3B8-PFY4': { label: 'Tek Kullanım #189', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-QCYD-52AL-UNQR-8O1K': { label: 'Tek Kullanım #190', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-JWV2-QNRM-TN29-TNYF': { label: 'Tek Kullanım #191', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-M7VH-30QB-KERN-6YJM': { label: 'Tek Kullanım #192', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-K3TG-MALW-VMB0-IDD0': { label: 'Tek Kullanım #193', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-WPJ8-YI34-0SQC-NF9W': { label: 'Tek Kullanım #194', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-5N9C-70PA-8JX5-4PEG': { label: 'Tek Kullanım #195', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-JKS4-I2NR-1P02-JYV6': { label: 'Tek Kullanım #196', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-YJOA-OEJV-9LHA-LCKZ': { label: 'Tek Kullanım #197', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-3VWL-O7AM-MPQ0-HZYJ': { label: 'Tek Kullanım #198', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-B48W-UMH9-NKLY-BWGM': { label: 'Tek Kullanım #199', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-P9A9-URI7-EV4D-H9UG': { label: 'Tek Kullanım #200', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-F10O-O1PV-LND5-81LT': { label: 'Tek Kullanım #201', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-O4RQ-3Q7G-KTMQ-G6NX': { label: 'Tek Kullanım #202', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-9OWW-EW9V-08LI-UQDN': { label: 'Tek Kullanım #203', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-05XT-54FN-5G77-LK6H': { label: 'Tek Kullanım #204', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-QIV9-29SE-VL7F-Q8AB': { label: 'Tek Kullanım #205', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-Y595-CPJZ-E1XT-AR0K': { label: 'Tek Kullanım #206', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-O31N-ZSXP-EFJ3-1EGO': { label: 'Tek Kullanım #207', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-M62H-DXC6-RIJK-Q2ZU': { label: 'Tek Kullanım #208', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-V1FK-HNNK-8FWR-PK0Z': { label: 'Tek Kullanım #209', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-FKNW-BHKV-JZ09-OWGM': { label: 'Tek Kullanım #210', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-F4LN-5RGS-G6A8-MLIK': { label: 'Tek Kullanım #211', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-22XM-Q664-42SI-HXOD': { label: 'Tek Kullanım #212', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-LCTT-058C-UIJ0-YXIY': { label: 'Tek Kullanım #213', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-QBVT-DG3C-6SCI-VUQT': { label: 'Tek Kullanım #214', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-2LWH-EDHT-HRUU-5E51': { label: 'Tek Kullanım #215', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-H3WQ-A1VR-GSS8-K5IJ': { label: 'Tek Kullanım #216', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-ULP9-8RL9-QFCP-K7PW': { label: 'Tek Kullanım #217', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-TG21-HSLT-DKVU-FF12': { label: 'Tek Kullanım #218', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-4VF8-9X22-J7Q4-KFMM': { label: 'Tek Kullanım #219', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-0QPO-P1O8-M291-AZHZ': { label: 'Tek Kullanım #220', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-KNL2-LUHH-S4DI-LRZQ': { label: 'Tek Kullanım #221', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-8BXY-6RKV-NDXJ-N7DE': { label: 'Tek Kullanım #222', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-0L1O-FFKH-DIU1-JTKA': { label: 'Tek Kullanım #223', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-1C2Z-L46Q-5GQQ-LYZJ': { label: 'Tek Kullanım #224', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-0AEO-ORBT-6SAP-BS22': { label: 'Tek Kullanım #225', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-RUW0-U92T-24D7-V911': { label: 'Tek Kullanım #226', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-PJQ5-0XCX-MSY3-PAUA': { label: 'Tek Kullanım #227', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-3AIP-JIYL-QX1U-M55F': { label: 'Tek Kullanım #228', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-1HGA-V42T-8LLI-HKPJ': { label: 'Tek Kullanım #229', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-7HME-6P4N-P00N-QOHN': { label: 'Tek Kullanım #230', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-3DG6-0E1E-RV0L-G92M': { label: 'Tek Kullanım #231', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-JEQA-2O4M-84P4-K9DX': { label: 'Tek Kullanım #232', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-OQ8J-XLFI-UEFZ-1C25': { label: 'Tek Kullanım #233', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-XNOF-G780-3G5D-FRLW': { label: 'Tek Kullanım #234', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-6JL2-L5B5-6BNV-SFA6': { label: 'Tek Kullanım #235', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-D9ER-94TE-VWLQ-6EXN': { label: 'Tek Kullanım #236', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-WZR0-4HHE-7ICD-O5DI': { label: 'Tek Kullanım #237', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-GXL9-YSU5-1EPX-U7B6': { label: 'Tek Kullanım #238', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-NBHG-FB2F-LURM-W3UQ': { label: 'Tek Kullanım #239', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-HWTE-K17M-6J3R-TXYM': { label: 'Tek Kullanım #240', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-SCNX-8EIQ-ETK5-LP9C': { label: 'Tek Kullanım #241', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-5SO7-9H4H-A0MV-F4S2': { label: 'Tek Kullanım #242', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-NI8T-NDFW-W41F-7V4K': { label: 'Tek Kullanım #243', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-88K6-86QE-7AJU-L7W8': { label: 'Tek Kullanım #244', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-COF3-138I-2XOG-4C8J': { label: 'Tek Kullanım #245', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-6E07-FPY1-AELD-WQXK': { label: 'Tek Kullanım #246', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-E0QC-96MJ-9N6E-QV5Y': { label: 'Tek Kullanım #247', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-21ID-9VVN-5X48-PW5K': { label: 'Tek Kullanım #248', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-0JJS-P49C-D3IR-VXD2': { label: 'Tek Kullanım #249', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-ZU4N-S7NV-V28U-E1MY': { label: 'Tek Kullanım #250', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-6PO0-M24U-S73W-1YAU': { label: 'Tek Kullanım #251', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-A8D7-204J-3M9I-QBQ9': { label: 'Tek Kullanım #252', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-J2H1-TLOM-344M-W04I': { label: 'Tek Kullanım #253', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-3DZX-LRGN-JZM3-618L': { label: 'Tek Kullanım #254', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-EU6Z-U1TO-ZHDV-5OJZ': { label: 'Tek Kullanım #255', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-TO7D-835K-UC9P-BTYJ': { label: 'Tek Kullanım #256', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-R39I-IXHA-IAW4-OTUO': { label: 'Tek Kullanım #257', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-4UW5-90Z9-2JN6-7LM8': { label: 'Tek Kullanım #258', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-E49I-TE92-SRL3-VZZX': { label: 'Tek Kullanım #259', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-T9QU-BWRP-8GUU-CM5F': { label: 'Tek Kullanım #260', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-YCZU-80ZR-Z79H-QTYL': { label: 'Tek Kullanım #261', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-U58F-TYLA-VZME-9WT0': { label: 'Tek Kullanım #262', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-0IV1-GGXR-ED8U-8NOZ': { label: 'Tek Kullanım #263', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-EMDM-Z5RG-OI9W-M1SA': { label: 'Tek Kullanım #264', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-V9CN-G8TA-NA6U-48GW': { label: 'Tek Kullanım #265', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-GHM5-6VU6-Z5GF-3BBT': { label: 'Tek Kullanım #266', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-873L-KMGS-6RV9-777T': { label: 'Tek Kullanım #267', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-NQET-MNI3-GOM6-736Z': { label: 'Tek Kullanım #268', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-4DSX-LSUT-OTHL-QH7P': { label: 'Tek Kullanım #269', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-PCAD-UVL9-11ZS-B8LV': { label: 'Tek Kullanım #270', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-6TX0-TBKG-8B35-0SGN': { label: 'Tek Kullanım #271', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-Z6D8-6ZCH-HXA7-HY7A': { label: 'Tek Kullanım #272', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-I339-93N4-BFIY-5PU5': { label: 'Tek Kullanım #273', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-WH50-JYOO-K63R-VWOZ': { label: 'Tek Kullanım #274', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-QXIW-E6RG-L7JY-7OTK': { label: 'Tek Kullanım #275', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-UDE3-58TR-E9QD-I3G1': { label: 'Tek Kullanım #276', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-3IWP-FVB7-1GHL-U8M8': { label: 'Tek Kullanım #277', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-7MHX-OFKC-GGXP-5CIT': { label: 'Tek Kullanım #278', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-UF8C-YOTW-G7NF-DINU': { label: 'Tek Kullanım #279', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-31EI-WUCX-67XK-WQ0Y': { label: 'Tek Kullanım #280', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-WM9Q-7FTM-FWG8-95NA': { label: 'Tek Kullanım #281', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-2FQZ-TIO4-M7PP-0PNN': { label: 'Tek Kullanım #282', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-LO0H-HGH5-XW6T-1OXH': { label: 'Tek Kullanım #283', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-FDXK-31WB-HTFN-SGPY': { label: 'Tek Kullanım #284', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-NYJ0-UFO2-HOQ5-E7L7': { label: 'Tek Kullanım #285', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-W05Y-2DA5-B4L6-HFH4': { label: 'Tek Kullanım #286', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-N6V3-RZKD-U6FO-TWFT': { label: 'Tek Kullanım #287', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-Q9Y6-9XFQ-1ENN-GAY3': { label: 'Tek Kullanım #288', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-7VG6-88U5-95CE-KOF9': { label: 'Tek Kullanım #289', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-2Y8L-Z8CV-2A6P-G4GK': { label: 'Tek Kullanım #290', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-S6R6-BILQ-PB01-QCTE': { label: 'Tek Kullanım #291', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-9W0A-N6NB-YZM2-42OM': { label: 'Tek Kullanım #292', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-7ZTR-J67D-XLSE-33DC': { label: 'Tek Kullanım #293', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-NF22-5AA3-5WFW-5Q52': { label: 'Tek Kullanım #294', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-DEZH-0CD8-A2IB-CLTR': { label: 'Tek Kullanım #295', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-H9VG-KY5C-GAGH-FT9Z': { label: 'Tek Kullanım #296', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-ZCGL-9FWV-VSKP-30TX': { label: 'Tek Kullanım #297', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-8J1C-CM0W-3C1Z-A0DV': { label: 'Tek Kullanım #298', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-6NYY-CJ4Q-0RR1-L9GV': { label: 'Tek Kullanım #299', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-BMQQ-749Q-6QF1-PAFL': { label: 'Tek Kullanım #300', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-9WOA-2XGV-GDOF-MAOK': { label: 'Tek Kullanım #301', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-8TIR-0P8F-8C8C-LRKI': { label: 'Tek Kullanım #302', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-72OA-LFWY-PEEK-035N': { label: 'Tek Kullanım #303', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-8CQP-HLI5-L692-TULG': { label: 'Tek Kullanım #304', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-ELW8-IVI3-RQAS-D1WC': { label: 'Tek Kullanım #305', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-RV68-JQ12-JF4C-IWL3': { label: 'Tek Kullanım #306', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-RFJL-9VT3-X8VE-00H2': { label: 'Tek Kullanım #307', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-K2P3-AJFA-X1CQ-6FWT': { label: 'Tek Kullanım #308', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-V1DJ-JZQF-E8E5-TNLZ': { label: 'Tek Kullanım #309', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-TWXO-L4BK-UU5C-ZECC': { label: 'Tek Kullanım #310', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-FS7I-19MO-1RTS-XOF3': { label: 'Tek Kullanım #311', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-3QE6-JIXU-B4IB-HIF5': { label: 'Tek Kullanım #312', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-SL1Y-A1RY-ZTBV-HUAZ': { label: 'Tek Kullanım #313', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-UN6F-HT60-KUSF-HVML': { label: 'Tek Kullanım #314', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-JEKB-VXSO-GB20-5HU0': { label: 'Tek Kullanım #315', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-3Y53-MBWU-5JSL-HGMR': { label: 'Tek Kullanım #316', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-ZZQO-17RV-2Y7C-DABB': { label: 'Tek Kullanım #317', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-AJAQ-08DN-X80N-KXKB': { label: 'Tek Kullanım #318', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-EFQ7-96EW-8257-GE0Q': { label: 'Tek Kullanım #319', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-5ZJA-UCYH-ONBP-QGA6': { label: 'Tek Kullanım #320', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-X85Z-ZHJY-8GY3-9BU4': { label: 'Tek Kullanım #321', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-UZ2Z-0KDN-3TN6-0TLX': { label: 'Tek Kullanım #322', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-OUN9-1FY6-YO8D-JE7X': { label: 'Tek Kullanım #323', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-QTY6-M79F-MW04-U923': { label: 'Tek Kullanım #324', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-O359-TSUJ-T70Y-2RL4': { label: 'Tek Kullanım #325', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-N7S3-HMO1-DXQ4-6GA2': { label: 'Tek Kullanım #326', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-SDFC-8IO3-TD3A-BEG1': { label: 'Tek Kullanım #327', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-CJ8P-MOZK-NHPV-RWBR': { label: 'Tek Kullanım #328', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-BLBZ-5NTD-YWM8-RABR': { label: 'Tek Kullanım #329', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-6RTC-0Z7Q-0I9B-L14H': { label: 'Tek Kullanım #330', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-OAE5-27PS-QZN7-XBVZ': { label: 'Tek Kullanım #331', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-R6KF-KLDF-4HRA-1361': { label: 'Tek Kullanım #332', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-BGMY-4IQZ-6DF0-8UPN': { label: 'Tek Kullanım #333', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-ZASY-WDRK-UPCJ-8MO7': { label: 'Tek Kullanım #334', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-65EF-UXQ9-NJC2-GOUI': { label: 'Tek Kullanım #335', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-FEZA-C2EX-VA5E-742G': { label: 'Tek Kullanım #336', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-RRDN-WT2F-ES5C-S9UI': { label: 'Tek Kullanım #337', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-14NI-JCP5-2AY7-OV50': { label: 'Tek Kullanım #338', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-EW25-X1FV-K1PB-CD6F': { label: 'Tek Kullanım #339', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-XNOQ-37KT-LL8S-N5YZ': { label: 'Tek Kullanım #340', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-7VXU-QDRM-SWJJ-JKSL': { label: 'Tek Kullanım #341', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-66UM-L3SO-JPX1-6F1K': { label: 'Tek Kullanım #342', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-YNTL-2UG0-5WH2-3GXR': { label: 'Tek Kullanım #343', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-IRJU-TFVJ-839A-G77Q': { label: 'Tek Kullanım #344', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-9VJU-HBP9-VRNE-GN2B': { label: 'Tek Kullanım #345', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-4JTJ-27YH-6UAM-WJPI': { label: 'Tek Kullanım #346', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-WUJT-4FTL-H33H-W8D0': { label: 'Tek Kullanım #347', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-9JRD-4HQF-GHDI-LUVN': { label: 'Tek Kullanım #348', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-HDCZ-P0NW-NTJ5-R2SL': { label: 'Tek Kullanım #349', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-RW4V-NZVZ-N2HL-OIKI': { label: 'Tek Kullanım #350', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-VQA7-IZQ2-NMNR-06DJ': { label: 'Tek Kullanım #351', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-IN9R-G4XV-349N-1D6D': { label: 'Tek Kullanım #352', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-ZBC7-QK4K-6ILS-IDBX': { label: 'Tek Kullanım #353', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-287G-T76I-3HZC-D3GE': { label: 'Tek Kullanım #354', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-Q10F-7IA4-1SAS-CEBF': { label: 'Tek Kullanım #355', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-E54U-KIGD-IX1C-NAQ2': { label: 'Tek Kullanım #356', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-YOTO-S87M-VZ01-SOSR': { label: 'Tek Kullanım #357', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-2HVN-KVON-NLHA-PWF5': { label: 'Tek Kullanım #358', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-20XK-IAIP-RQQ5-QOB8': { label: 'Tek Kullanım #359', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-67KB-QNXP-VMSR-75RM': { label: 'Tek Kullanım #360', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-G7F9-FZJA-HSAO-2QWK': { label: 'Tek Kullanım #361', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-BSEP-R1B2-0UC8-7NXP': { label: 'Tek Kullanım #362', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-0JF6-DNOB-K8HU-P3FT': { label: 'Tek Kullanım #363', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-J6AC-4JRC-Q97R-CQ6W': { label: 'Tek Kullanım #364', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-948J-U63L-XSY4-VY32': { label: 'Tek Kullanım #365', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-I3PJ-7K99-BV2J-3T4H': { label: 'Tek Kullanım #366', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-8QFD-TN0P-LCFR-7CL6': { label: 'Tek Kullanım #367', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-P3FR-B7EI-5R8V-O4KV': { label: 'Tek Kullanım #368', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-FFLN-CC2A-TRD8-3X9A': { label: 'Tek Kullanım #369', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-GE9N-Y3MU-B6LB-U9W3': { label: 'Tek Kullanım #370', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-GGO9-DVWS-3KCV-JXZD': { label: 'Tek Kullanım #371', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-VYB4-XZ3M-SKZO-3I9L': { label: 'Tek Kullanım #372', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-LIFF-CVED-QFC1-YUZP': { label: 'Tek Kullanım #373', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-EX7T-V7HR-BFGC-B4JG': { label: 'Tek Kullanım #374', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-RXOZ-LEL8-PL6U-ZA28': { label: 'Tek Kullanım #375', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-OR9F-5IV8-6ZP1-WZ2N': { label: 'Tek Kullanım #376', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-AR3S-HLX0-ST69-WWP8': { label: 'Tek Kullanım #377', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-2QZT-T1BL-OW2R-576V': { label: 'Tek Kullanım #378', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-ILVQ-KXBI-6JJT-B8QO': { label: 'Tek Kullanım #379', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-P82J-3TPS-82XL-VB9H': { label: 'Tek Kullanım #380', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-XKEI-9ULT-HYCX-8AE0': { label: 'Tek Kullanım #381', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-JXYO-6HFD-7LTT-C954': { label: 'Tek Kullanım #382', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-AI22-78EQ-E12Q-EYKC': { label: 'Tek Kullanım #383', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-2MNG-806W-819F-MSYG': { label: 'Tek Kullanım #384', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-91MM-O1DS-3HGW-10C9': { label: 'Tek Kullanım #385', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-IX6R-1NXH-BQAM-97XO': { label: 'Tek Kullanım #386', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-485D-4VUE-ER90-MWB4': { label: 'Tek Kullanım #387', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-LL3K-4BK8-EJNF-MOCT': { label: 'Tek Kullanım #388', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-CLKA-9LZ5-7V4N-DJM5': { label: 'Tek Kullanım #389', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-GH2I-J4TT-43TU-YKTK': { label: 'Tek Kullanım #390', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-61B7-PXJB-C8VD-RQNT': { label: 'Tek Kullanım #391', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-JVU2-CGXU-5WAH-ZG85': { label: 'Tek Kullanım #392', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-S9AS-J21G-TCHY-GTMO': { label: 'Tek Kullanım #393', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-V6KI-4EPX-R9OG-JEGX': { label: 'Tek Kullanım #394', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-EYEB-900Y-EH8U-XZ3A': { label: 'Tek Kullanım #395', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-DHF0-25LO-XYPH-WHM5': { label: 'Tek Kullanım #396', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-4XR8-PJPF-240S-HDKK': { label: 'Tek Kullanım #397', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-G1R1-CQKI-H548-JRPE': { label: 'Tek Kullanım #398', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-2XN9-TXFJ-NJD5-SLOC': { label: 'Tek Kullanım #399', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-8D6J-I874-U77W-9A8L': { label: 'Tek Kullanım #400', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-YTUA-GDL1-J2VW-Y8UM': { label: 'Tek Kullanım #401', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-NW6L-4M1T-RPUY-D6I5': { label: 'Tek Kullanım #402', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-HO9C-Y9PE-0HDJ-7O9X': { label: 'Tek Kullanım #403', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-66D7-WDJV-07IR-JG10': { label: 'Tek Kullanım #404', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-7R92-5DSI-UAZ7-1UF0': { label: 'Tek Kullanım #405', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-9UYG-3IBG-3HKC-QWB0': { label: 'Tek Kullanım #406', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-0N11-4PY4-FNGB-G4PD': { label: 'Tek Kullanım #407', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-FCOP-ZFZZ-5T6V-8VLQ': { label: 'Tek Kullanım #408', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-3VXH-QG4Q-LV72-4HK1': { label: 'Tek Kullanım #409', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-QDU2-EB0T-4UOX-Z3BG': { label: 'Tek Kullanım #410', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-52IB-4TCT-DSDJ-T3BR': { label: 'Tek Kullanım #411', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-4F2Z-DFPP-WC1Q-Y9MB': { label: 'Tek Kullanım #412', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-AAXA-3BL1-3VCG-8D2T': { label: 'Tek Kullanım #413', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-N20V-Z9LY-2SKK-FTFY': { label: 'Tek Kullanım #414', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-TKS1-F3KW-BNBP-AVAJ': { label: 'Tek Kullanım #415', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-IMMN-STOU-IFJI-LXN3': { label: 'Tek Kullanım #416', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-2NBZ-WBHO-4UW2-AWW7': { label: 'Tek Kullanım #417', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-7GCJ-BEO4-EUTA-WJ4G': { label: 'Tek Kullanım #418', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-8R7S-N1TC-JFCZ-WKGU': { label: 'Tek Kullanım #419', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-Y0OF-IPZN-0THL-2C53': { label: 'Tek Kullanım #420', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-K9OM-115B-OIYM-YK86': { label: 'Tek Kullanım #421', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-ADNO-KKU3-S710-NUSG': { label: 'Tek Kullanım #422', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-9L9Q-3CYB-YC4I-6H1M': { label: 'Tek Kullanım #423', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-3JLZ-OHFD-DVSZ-2TVH': { label: 'Tek Kullanım #424', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-VWHH-OLI5-4087-WS1L': { label: 'Tek Kullanım #425', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-OQSO-T56A-G39B-D2EE': { label: 'Tek Kullanım #426', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-V7IN-RZJK-9E0O-AWHN': { label: 'Tek Kullanım #427', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-2ECL-CES1-KTIO-R4V1': { label: 'Tek Kullanım #428', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-OG07-VSCQ-MPD7-Z4KS': { label: 'Tek Kullanım #429', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-O03W-2MRO-P2BY-EE2A': { label: 'Tek Kullanım #430', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-BG9S-HO5D-5AFQ-L0DG': { label: 'Tek Kullanım #431', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-H6M3-SGUR-4PU6-W93K': { label: 'Tek Kullanım #432', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-8EKT-292M-I560-TOHX': { label: 'Tek Kullanım #433', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-WEDN-YA3S-9UCK-U7ZQ': { label: 'Tek Kullanım #434', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-J3OV-U7PW-35X3-X10Y': { label: 'Tek Kullanım #435', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-14DS-F2UW-UFUK-15U2': { label: 'Tek Kullanım #436', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-486D-43I2-1PU8-BWAU': { label: 'Tek Kullanım #437', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-FXQP-6XGH-U9IV-LX6X': { label: 'Tek Kullanım #438', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-6SXU-A3KA-MOX9-6UPB': { label: 'Tek Kullanım #439', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-22O1-TFXD-TUMW-7HU3': { label: 'Tek Kullanım #440', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-D351-3LM7-E41O-FV14': { label: 'Tek Kullanım #441', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-J643-F1AY-SV6O-9E9N': { label: 'Tek Kullanım #442', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-HCGW-33A8-NCXC-WC0B': { label: 'Tek Kullanım #443', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-OGWH-UPOF-0HKA-RPKF': { label: 'Tek Kullanım #444', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-ZQFO-5YVM-TD50-3779': { label: 'Tek Kullanım #445', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-U7C1-A7YJ-8HQD-E7M7': { label: 'Tek Kullanım #446', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-H6OQ-7QH9-6YCF-NHP3': { label: 'Tek Kullanım #447', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-9LQT-9NGQ-6TLV-0GUB': { label: 'Tek Kullanım #448', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-5KB3-PKBQ-Y3OT-760R': { label: 'Tek Kullanım #449', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-S6C4-X56V-3DGS-9GT0': { label: 'Tek Kullanım #450', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-R0VI-P35T-54GY-LBI1': { label: 'Tek Kullanım #451', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-8A2V-ZPY9-QZO7-IO2F': { label: 'Tek Kullanım #452', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-2NAT-D4GW-LF9Y-XAM9': { label: 'Tek Kullanım #453', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-7YOF-CX7C-ULOQ-VBV1': { label: 'Tek Kullanım #454', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-JPVK-TAF6-BLBV-0XT9': { label: 'Tek Kullanım #455', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-VYSK-E5M0-SWXK-QTQ3': { label: 'Tek Kullanım #456', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-6ZPM-G6OO-H1XA-WJ28': { label: 'Tek Kullanım #457', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-CW9R-TNFW-6SZF-4LUR': { label: 'Tek Kullanım #458', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-02TY-AXY2-NZ5X-51O0': { label: 'Tek Kullanım #459', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-LQBY-G6G0-4JGS-QOF3': { label: 'Tek Kullanım #460', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-WGI8-Y042-3H7T-6UDO': { label: 'Tek Kullanım #461', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-JY6G-107G-8O8G-8HZM': { label: 'Tek Kullanım #462', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-VYD4-7DZN-AXS8-8UAL': { label: 'Tek Kullanım #463', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-RY3I-GWEY-SU7E-RRBS': { label: 'Tek Kullanım #464', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-ZUJB-4HLL-QLLD-0N53': { label: 'Tek Kullanım #465', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-R4SI-P4B8-J4ZX-D82B': { label: 'Tek Kullanım #466', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-MQW8-EVRC-0ERJ-E4S4': { label: 'Tek Kullanım #467', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-MFEL-33PC-L1S2-QPKG': { label: 'Tek Kullanım #468', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-RMM0-YTMV-82LZ-WGE8': { label: 'Tek Kullanım #469', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-683P-LE45-B2NI-XI8E': { label: 'Tek Kullanım #470', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-5532-5CAM-BHWT-GDK4': { label: 'Tek Kullanım #471', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-SNV9-RR49-HQWP-8XFA': { label: 'Tek Kullanım #472', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-NS0G-NH8S-2GT3-0GCH': { label: 'Tek Kullanım #473', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-F4AK-DNAD-IJFZ-QAFQ': { label: 'Tek Kullanım #474', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-SDQ2-6RL0-NWRN-57LW': { label: 'Tek Kullanım #475', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-S1YQ-6T0O-TGPE-QCYH': { label: 'Tek Kullanım #476', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-207X-887L-GUUW-0580': { label: 'Tek Kullanım #477', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-2XVX-ITIF-XZIU-6HUL': { label: 'Tek Kullanım #478', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-PRX0-5H3K-7UJJ-31W0': { label: 'Tek Kullanım #479', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-GQ34-PGGC-BI6Q-SRER': { label: 'Tek Kullanım #480', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-6LUU-6IF3-1D2O-25TG': { label: 'Tek Kullanım #481', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-5JTV-75SS-UMH0-ZNSG': { label: 'Tek Kullanım #482', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-WOC4-191H-KK7X-34UD': { label: 'Tek Kullanım #483', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-C4FH-065A-FU20-VMAK': { label: 'Tek Kullanım #484', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-RX0G-WHAO-QHVD-8FBF': { label: 'Tek Kullanım #485', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-FHEY-ZQQX-BV0D-EOEG': { label: 'Tek Kullanım #486', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-EZQ0-X717-HW0B-UPMT': { label: 'Tek Kullanım #487', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-XQ53-1D1K-DK2Y-WFMA': { label: 'Tek Kullanım #488', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-X9FK-E4VZ-N8Z4-C0X2': { label: 'Tek Kullanım #489', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-HYVE-ZRAD-8EJP-MLNL': { label: 'Tek Kullanım #490', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-7HA7-52A9-7PNF-IRCV': { label: 'Tek Kullanım #491', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-CZ8P-5AIE-KX6M-J53Y': { label: 'Tek Kullanım #492', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-XHZK-IEW6-OR6X-N6LC': { label: 'Tek Kullanım #493', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-PY9N-PGIR-D4JP-DT12': { label: 'Tek Kullanım #494', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-SBA6-2TDO-1DFS-TS3Y': { label: 'Tek Kullanım #495', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-QFBZ-9ZQH-BQIQ-ICB5': { label: 'Tek Kullanım #496', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-NTJK-2GZA-UGTT-MPPJ': { label: 'Tek Kullanım #497', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-BEAH-Y5HO-37PJ-PO3C': { label: 'Tek Kullanım #498', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-VS3Z-RB9O-PLLV-12BV': { label: 'Tek Kullanım #499', type: 'onetime', expiry: '2099-12-31' },
+  'TK26-XEJA-XVT7-CZ14-WJAI': { label: 'Tek Kullanım #500', type: 'onetime', expiry: '2099-12-31' }
+};
+
+const LIC_SK = 'tipsterPanelLicense';
+const LIC_PASS_SK = 'tipsterPanelPass';
+
+// ═══════════════════════════════════════════════════════════════
+//  YARDIMCI: Basit hash (SHA-256 yerine, tarayıcı içi)
+// ═══════════════════════════════════════════════════════════════
+async function hashPass(pass) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pass));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ADIM GEÇİŞLERİ
+// ═══════════════════════════════════════════════════════════════
+function showStep(id) {
+  ['stepLicense','stepSetPass','stepLogin','stepReset'].forEach(s => {
+    document.getElementById(s).style.display = 'none';
+  });
+  document.getElementById(id).style.display = '';
+  // auto focus
+  setTimeout(() => {
+    const el = document.querySelector(`#${id} input`);
+    if (el) el.focus();
+  }, 100);
+}
+
+function showLoginStep() {
+  const saved = getSavedLic();
+  if (!saved) { showStep('stepLicense'); return; }
+  const lic = LIC_CODES[saved.code];
+  const typeLabel = lic && lic.type === 'annual' ? '🗓 Yıllık Lisans' : '1️⃣ Tek Kullanım Lisans';
+  document.getElementById('loginLicLabel').textContent = saved.label || 'Aktif Lisans';
+  document.getElementById('loginTypeBadge').textContent = typeLabel;
+  showStep('stepLogin');
+  setTimeout(() => document.getElementById('loginPassInput').focus(), 100);
+}
+
+function showResetMode() {
+  showStep('stepReset');
+  document.getElementById('resetLicInput').value = '';
+  licFormat(document.getElementById('resetLicInput'));
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  LİSANS FORMAT
+// ═══════════════════════════════════════════════════════════════
+function licFormat(inp) {
+  let v = inp.value.replace(/[^A-Za-z0-9]/g,'').toUpperCase();
+  let out = '';
+  for (let i = 0; i < v.length && i < 20; i++) {
+    if (i > 0 && i % 4 === 0) out += '-';
+    out += v[i];
+  }
+  inp.value = out;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  API YARDIMCIları — Server Functions üzerinden DB erişimi
+// ═══════════════════════════════════════════════════════════════
+async function apiCall(endpoint, body) {
+  const res = await fetch('/api/' + endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  return { status: res.status, data: await res.json() };
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ADIM 1 — Lisans kodu doğrula (DB kontrollü)
+// ═══════════════════════════════════════════════════════════════
+async function licSubmit() {
+  const code = document.getElementById('licInput').value.trim().toUpperCase();
+  const errEl = document.getElementById('licErr');
+  const inp   = document.getElementById('licInput');
+  const btn   = document.querySelector('#stepLicense .lic-btn');
+  errEl.textContent = '';
+  inp.classList.remove('error');
+
+  if (!code) {
+    inp.classList.add('error');
+    errEl.textContent = '⚠ Lütfen lisans kodunu girin.';
+    return;
+  }
+
+  // Yerel format/geçerlilik kontrolü
+  const lic = LIC_CODES[code];
+  if (!lic) {
+    inp.classList.add('error');
+    errEl.textContent = '✕ Geçersiz lisans kodu.';
+    return;
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+  if (lic.type === 'annual' && lic.expiry < today) {
+    inp.classList.add('error');
+    errEl.textContent = `✕ Bu lisans ${lic.expiry} tarihinde sona ermiş.`;
+    return;
+  }
+
+  // Bu tarayıcıda zaten aktif mi?
+  const existing = getSavedLic();
+  if (existing && existing.code === code) {
+    showLoginStep();
+    return;
+  }
+
+  // Tek kullanımlık: global DB'de daha önce kullanıldı mı?
+  if (lic.type === 'onetime') {
+    btn.textContent = 'Kontrol ediliyor…';
+    btn.disabled = true;
+    try {
+      const { status, data } = await apiCall('license-check', { code });
+      if (status !== 200) throw new Error('server_error');
+      if (data.used) {
+        inp.classList.add('error');
+        errEl.textContent = '✕ Bu tek kullanımlık kod daha önce başka bir cihazda kullanılmış.';
+        btn.textContent = 'Devam →';
+        btn.disabled = false;
+        return;
+      }
+    } catch (e) {
+      errEl.textContent = '⚠ Sunucuya bağlanılamadı. Lütfen tekrar deneyin.';
+      btn.textContent = 'Devam →';
+      btn.disabled = false;
+      return;
+    }
+    btn.textContent = 'Devam →';
+    btn.disabled = false;
+  }
+
+  // İlk aktivasyon → şifre oluştur adımına geç
+  const typeLabel = lic.type === 'annual'
+    ? '🗓 Yıllık Lisans · ' + lic.label
+    : '1️⃣ Tek Kullanım · ' + lic.label;
+  document.getElementById('spLicLabel').textContent = typeLabel;
+  document.getElementById('spTypeBadge').textContent = lic.type === 'annual'
+    ? '✓ Yıllık Lisans Doğrulandı'
+    : '✓ Tek Kullanım Lisans Doğrulandı';
+  sessionStorage.setItem('pendingLicCode', code);
+  showStep('stepSetPass');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ADIM 2 — Şifre oluştur + DB'ye kaydet
+// ═══════════════════════════════════════════════════════════════
+async function passCreate() {
+  const p1    = document.getElementById('passInput1').value;
+  const p2    = document.getElementById('passInput2').value;
+  const errEl = document.getElementById('passErr');
+  const btn   = document.querySelector('#stepSetPass .lic-btn');
+  errEl.textContent = '';
+
+  if (!p1 || p1.length < 4) { errEl.textContent = '⚠ Şifre en az 4 karakter olmalı.'; return; }
+  if (p1 !== p2)             { errEl.textContent = '✕ Şifreler eşleşmiyor.';           return; }
+
+  const code = sessionStorage.getItem('pendingLicCode');
+  if (!code) { showStep('stepLicense'); return; }
+
+  const lic   = LIC_CODES[code];
+  const today = new Date().toISOString().slice(0, 10);
+  const hash  = await hashPass(p1);
+
+  btn.textContent = 'Kaydediliyor…';
+  btn.disabled    = true;
+
+  try {
+    const { status, data } = await apiCall('license-activate', {
+      code, passHash: hash, label: lic.label, type: lic.type
+    });
+
+    if (status === 409 || data?.error === 'already_used') {
+      errEl.textContent = '✕ Bu tek kullanımlık kod daha önce başka bir cihazda aktivasyon yapılmış.';
+      btn.textContent = 'Panele Giriş Yap →';
+      btn.disabled    = false;
+      return;
+    }
+    if (status !== 200) throw new Error('server_error');
+  } catch (e) {
+    errEl.textContent = '⚠ Sunucuya bağlanılamadı. Lütfen tekrar deneyin.';
+    btn.textContent   = 'Panele Giriş Yap →';
+    btn.disabled      = false;
+    return;
+  }
+
+  // Yerel cache — bu tarayıcıda tekrar şifre sormasın
+  const saved = {
+    code, label: lic.label, type: lic.type,
+    expiry: lic.type === 'annual' ? lic.expiry : '2099-12-31',
+    activatedAt: today
+  };
+  localStorage.setItem(LIC_SK, JSON.stringify(saved));
+  localStorage.setItem(LIC_PASS_SK, hash);
+  sessionStorage.removeItem('pendingLicCode');
+
+  btn.textContent = 'Panele Giriş Yap →';
+  btn.disabled    = false;
+  openPanel(saved);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ADIM 3 — Şifre ile giriş (DB'den doğrulama)
+// ═══════════════════════════════════════════════════════════════
+async function loginSubmit() {
+  const pass  = document.getElementById('loginPassInput').value;
+  const errEl = document.getElementById('loginErr');
+  const btn   = document.querySelector('#stepLogin .lic-btn');
+  errEl.textContent = '';
+
+  if (!pass) { errEl.textContent = '⚠ Şifrenizi girin.'; return; }
+
+  const saved = getSavedLic();
+  if (!saved) { showStep('stepLicense'); return; }
+
+  const hash      = await hashPass(pass);
+  const localHash = localStorage.getItem(LIC_PASS_SK);
+
+  // Hızlı yerel kontrol
+  if (localHash && localHash === hash) { openPanel(saved); return; }
+
+  // DB'den doğrula
+  btn.textContent = 'Doğrulanıyor…';
+  btn.disabled    = true;
+
+  try {
+    const { status, data } = await apiCall('license-login', { code: saved.code, passHash: hash });
+
+    if (status === 401 || data?.error === 'wrong_password') {
+      errEl.textContent = '✕ Yanlış şifre.';
+      document.getElementById('loginPassInput').classList.add('error');
+      setTimeout(() => document.getElementById('loginPassInput').classList.remove('error'), 600);
+      btn.textContent = 'Giriş Yap →';
+      btn.disabled    = false;
+      return;
+    }
+    if (status !== 200) throw new Error('server_error');
+
+    // DB doğrulandı → yerel cache güncelle
+    localStorage.setItem(LIC_PASS_SK, hash);
+  } catch (e) {
+    // DB erişimi başarısız — yerel hash varsa offline toleransı
+    if (!localHash) {
+      errEl.textContent = '⚠ Sunucuya bağlanılamadı. Lütfen tekrar deneyin.';
+      btn.textContent   = 'Giriş Yap →';
+      btn.disabled      = false;
+      return;
+    }
+    errEl.textContent = '✕ Yanlış şifre.';
+    document.getElementById('loginPassInput').classList.add('error');
+    setTimeout(() => document.getElementById('loginPassInput').classList.remove('error'), 600);
+    btn.textContent = 'Giriş Yap →';
+    btn.disabled    = false;
+    return;
+  }
+
+  btn.textContent = 'Giriş Yap →';
+  btn.disabled    = false;
+  openPanel(saved);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ADIM 4 — Şifre sıfırla (DB üzerinden)
+// ═══════════════════════════════════════════════════════════════
+async function resetSubmit() {
+  const code  = document.getElementById('resetLicInput').value.trim().toUpperCase();
+  const p1    = document.getElementById('resetPass1').value;
+  const p2    = document.getElementById('resetPass2').value;
+  const errEl = document.getElementById('resetErr');
+  const btn   = document.querySelector('#stepReset .lic-btn');
+  errEl.textContent = '';
+
+  const lic = LIC_CODES[code];
+  if (!lic)              { errEl.textContent = '✕ Geçersiz lisans kodu.';         return; }
+  if (!p1 || p1.length < 4) { errEl.textContent = '⚠ Şifre en az 4 karakter olmalı.'; return; }
+  if (p1 !== p2)         { errEl.textContent = '✕ Şifreler eşleşmiyor.';          return; }
+
+  const hash = await hashPass(p1);
+  btn.textContent = 'Güncelleniyor…';
+  btn.disabled    = true;
+
+  try {
+    const { status, data } = await apiCall('license-reset', { code, passHash: hash });
+
+    if (status === 404) {
+      errEl.textContent = '✕ Bu lisans kodu henüz aktivasyon yapılmamış.';
+      btn.textContent   = 'Şifreyi Sıfırla →';
+      btn.disabled      = false;
+      return;
+    }
+    if (status !== 200) throw new Error('server_error');
+  } catch (e) {
+    errEl.textContent = '⚠ Sunucuya bağlanılamadı. Lütfen tekrar deneyin.';
+    btn.textContent   = 'Şifreyi Sıfırla →';
+    btn.disabled      = false;
+    return;
+  }
+
+  // Yerel cache güncelle
+  const today   = new Date().toISOString().slice(0, 10);
+  const saved   = getSavedLic();
+  const newSaved = saved || {
+    code, label: lic.label, type: lic.type,
+    expiry: lic.type === 'annual' ? lic.expiry : '2099-12-31',
+    activatedAt: today
+  };
+  localStorage.setItem(LIC_SK, JSON.stringify(newSaved));
+  localStorage.setItem(LIC_PASS_SK, hash);
+
+  btn.textContent = 'Şifreyi Sıfırla →';
+  btn.disabled    = false;
+  toast('Şifre güncellendi, giriş yapılıyor…', 'ok');
+  setTimeout(() => openPanel(newSaved), 800);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  YARDIMCI
+// ═══════════════════════════════════════════════════════════════
+function getSavedLic() {
+  try {
+    const d = JSON.parse(localStorage.getItem(LIC_SK) || 'null');
+    if (!d) return null;
+    const lic = LIC_CODES[d.code];
+    if (!lic) return null;
+    if (lic.type === 'annual') {
+      const today = new Date().toISOString().slice(0, 10);
+      if (d.expiry < today) return null;
+    }
+    return d;
+  } catch (e) { return null; }
+}
+
+function openPanel(licData) {
+  document.getElementById('licenseScreen').style.display = 'none';
+  document.getElementById('mainApp').style.display = '';
+  const lic = LIC_CODES[licData.code] || {};
+  const typeTag = lic.type === 'annual' ? '🗓' : '1️⃣';
+  if (lic.type === 'annual') {
+    const expDate = new Date(licData.expiry);
+    const diffDays = Math.ceil((expDate - new Date()) / 86400000);
+    document.getElementById('licTagText').textContent = `${typeTag} ${licData.label} · ${diffDays}g kaldı`;
+  } else {
+    document.getElementById('licTagText').textContent = `${typeTag} ${licData.label}`;
+  }
+  doLoad();
+  buildTipsterChecks();
+  render();
+  if (MEMBERS.length) document.getElementById('xlStatus').textContent = `✓ ${MEMBERS.length} üye yüklü`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  STORAGE
+// ═══════════════════════════════════════════════════════════════
+function doSave() {
+  try {
+    localStorage.setItem(SK, JSON.stringify({ MEMBERS, entries, rCiro: document.getElementById('rCiro').value, rKazanc: document.getElementById('rKazanc').value }));
+  } catch(e){}
+}
+
+function arsivSave() {
+  try { localStorage.setItem(SK_ARSIV, JSON.stringify(arsivData)); } catch(e){}
+}
+
+function arsivLoad() {
+  try {
+    const d = JSON.parse(localStorage.getItem(SK_ARSIV) || 'null');
+    arsivData = Array.isArray(d) ? d : [];
+  } catch(e) { arsivData = []; }
+}
+
+function doLoad() {
+  ['tipsterPanel_v2','tipsterPanelV1','tipsterPanelV2','tipsterPanelV3','tipsterPanel'].forEach(k => localStorage.removeItem(k));
+  try {
+    const d = JSON.parse(localStorage.getItem(SK) || 'null');
+    if (!d) return;
+    MEMBERS = Array.isArray(d.MEMBERS) ? d.MEMBERS.map(m => ({
+      tc: String(m.tc||''), tel: String(m.tel||''), ad: String(m.ad||''),
+      hafta: String(m.hafta||''), ciro: parseFloat(m.ciro)||0, kaz: parseFloat(m.kaz)||0
+    })) : [];
+    const cr = parseFloat(d.rCiro)||2;
+    const kr = parseFloat(d.rKazanc)||2;
+    document.getElementById('rCiro').value   = cr;
+    document.getElementById('rKazanc').value = kr;
+    entries = Array.isArray(d.entries) ? d.entries.map(e => {
+      const ciro = parseFloat(e.ciro)||0, kaz = parseFloat(e.kaz)||0;
+      const ecr = parseFloat(e.cr)||cr, ekr = parseFloat(e.kr)||kr;
+      return {
+        m: { tc: String(e.m&&e.m.tc||''), tel: String(e.m&&e.m.tel||''), ad: String(e.m&&e.m.ad||'') },
+        hafta: String(e.hafta||''), ciro, kaz,
+        ck: parseFloat((ciro*ecr/100).toFixed(4)),
+        kk: kaz>0 ? parseFloat((kaz*ekr/100).toFixed(4)) : 0,
+        cr: ecr, kr: ekr,
+        tips: Array.isArray(e.tips) ? e.tips : []
+      };
+    }) : [];
+  } catch(e) { MEMBERS=[]; entries=[]; }
+  arsivLoad();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════════════════════
+function last4(tc) {
+  const d = String(tc).replace(/\D/g,'');
+  return d.length>=4 ? d.slice(-4) : String(tc).slice(-4);
+}
+function num(str) {
+  const n = parseFloat(String(str||'').trim().replace(/\s/g,'').replace(',','.'));
+  return isNaN(n) ? 0 : n;
+}
+function getR(id) { return parseFloat(document.getElementById(id).value)||0; }
+function getV(id) { return num(document.getElementById(id).value); }
+function fmt(n) { return '₺' + Number(n||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function maskName(ad) {
+  if (!ad || ad==='—') return ad;
+  const parts = ad.trim().split(/\s+/);
+  if (parts.length===1) return parts[0].slice(0,2)+'***';
+  return parts[0].slice(0,2)+'*** '+parts.slice(1).map(p=>p.charAt(0)+'.').join(' ');
+}
+function rgb(h) { return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)].join(','); }
+
+let _tt;
+function toast(msg, type='ok', dur=3000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast '+type+' show';
+  clearTimeout(_tt); _tt = setTimeout(()=>t.classList.remove('show'), dur);
+}
+function modal(title, body, btns) {
+  document.getElementById('mTitle').textContent = title;
+  document.getElementById('mBody').innerHTML = body;
+  const bc = document.getElementById('mBtns');
+  bc.innerHTML = '';
+  btns.forEach(b => {
+    const el = document.createElement('button');
+    el.className = 'mbtn '+b.cls; el.textContent = b.label;
+    el.onclick = () => { document.getElementById('moverlay').classList.remove('show'); if(b.fn) b.fn(); };
+    bc.appendChild(el);
+  });
+  document.getElementById('moverlay').classList.add('show');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  EXCEL
+// ═══════════════════════════════════════════════════════════════
+function doLoadExcel(ev) {
+  const file = ev.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const wb = XLSX.read(e.target.result, {type:'binary'});
+      const ws1 = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws1, {header:1, defval:''});
+      const newM = [];
+      for (let i=1; i<rows.length; i++) {
+        const r = rows[i];
+        const tc   = String(r[0]||'').trim();
+        const tel  = String(r[1]||'').trim();
+        const ad   = String(r[2]||'').trim();
+        const hafta= String(r[3]||'').trim();
+        const ciro = parseFloat(String(r[8]||'0').replace(',','.'))||0;
+        if (!tc && !tel && !ad) continue;
+        newM.push({ tc:tc||'—', tel:tel||'—', ad:ad||'—', hafta, ciro, kaz:0 });
+      }
+
+      let autoAdded=0, autoRemoved=0, autoSkipped=0;
+      if (wb.SheetNames.length>=2) {
+        const ws2 = wb.Sheets[wb.SheetNames[1]];
+        const rows2 = XLSX.utils.sheet_to_json(ws2, {header:1, defval:''});
+        const cr = parseFloat(document.getElementById('rCiro').value)||2;
+        if (rows2.length>=1) {
+          const headers = rows2[0];
+          for (let col=0; col<headers.length; col++) {
+            const tipsterAdi = String(headers[col]||'').trim();
+            if (!tipsterAdi) continue;
+            let matchedTipster = TIPSTERS.find(t =>
+              t.toLowerCase()===tipsterAdi.toLowerCase() ||
+              t.toLowerCase().replace('tipster ','')===tipsterAdi.toLowerCase().replace('tipster ','')
+            );
+            if (!matchedTipster) { matchedTipster=tipsterAdi; if(!TIPSTERS.includes(tipsterAdi)) TIPSTERS.push(tipsterAdi); }
+            for (let row=1; row<rows2.length; row++) {
+              const cell = String(rows2[row][col]||'').trim();
+              if (!cell) continue;
+              const son4 = cell.replace(/\D/g,'').slice(-4);
+              if (!son4) continue;
+              const member = newM.find(m=>last4(m.tel)===son4||last4(m.tc)===son4)||
+                             MEMBERS.find(m=>last4(m.tel)===son4||last4(m.tc)===son4);
+              if (!member) { autoSkipped++; continue; }
+              const already = entries.find(en=>(last4(en.m.tel)===son4||last4(en.m.tc)===son4)&&en.tips.includes(matchedTipster));
+              if (!already) {
+                const ciro=member.ciro||0, ck=parseFloat((ciro*cr/100).toFixed(4));
+                entries.push({ m:{tc:member.tc,tel:member.tel,ad:member.ad}, hafta:member.hafta||'', ciro, kaz:0, ck, kk:0, cr, kr:0, tips:[matchedTipster] });
+                autoAdded++;
+              }
+            }
+          }
+        }
+      }
+      if (!newM.length && autoAdded===0) { toast('Excel boş veya okunamadı','err'); return; }
+      const added = newM.filter(nm=>!MEMBERS.some(m=>m.tc===nm.tc&&m.tel===nm.tel));
+      MEMBERS = [...MEMBERS, ...added];
+      doSave(); buildMemberList();
+      let statusMsg = `✓ ${newM.length} üye okundu, ${added.length} yeni`;
+      if (autoAdded>0) statusMsg += ` | +${autoAdded} kayıt`;
+      document.getElementById('xlStatus').textContent = statusMsg;
+      const logWrap=document.getElementById('autoLogWrap'), logEl=document.getElementById('autoLog');
+      if (logWrap&&logEl) {
+        logWrap.style.display='block';
+        logEl.innerHTML =
+          `<span style="color:var(--green)">✓ ${newM.length}</span> üye satırı okundu<br>`+
+          `<span style="color:var(--accent)">+${added.length}</span> yeni üye eklendi<br>`+
+          (autoAdded?`<span style="color:var(--green)">+${autoAdded}</span> kayıt işlendi<br>`:'')+
+          (autoSkipped?`<span style="color:var(--amber)">${autoSkipped}</span> satır atlandı<br>`:'');
+      }
+      toast(`${added.length} üye yüklendi`+(autoAdded?`, ${autoAdded} kayıt eklendi`:''),'ok');
+      render();
+    } catch(err) { toast('Excel okunamadı: '+err.message,'err'); }
+    ev.target.value='';
+  };
+  reader.readAsBinaryString(file);
+}
+
+function doConfirmClear() {
+  modal('Tümünü Temizle',
+    '<div style="color:var(--red);font-weight:600;margin-bottom:12px">Tüm veriler silinecek:</div>— Üye listesi<br>— Tüm kayıtlar<br>— Komisyon verileri<br><br>Bu işlem geri alınamaz.',
+    [
+      {label:'İptal',cls:'mbtn-cancel',fn:null},
+      {label:'Evet, Temizle',cls:'mbtn-warn',fn:()=>{
+        MEMBERS=[]; entries=[]; selSet.clear();
+        localStorage.removeItem(SK);
+        buildMemberList(); render();
+        document.getElementById('xlStatus').textContent='';
+        toast('Tüm veriler temizlendi','ok');
+      }}
+    ]);
+}
+
+function doExport() {
+  if (!entries.length) { toast('Dışa aktarılacak kayıt yok','warn'); return; }
+  const rows = [['Üye TC (Son 4)','Telefon','Açıklama','Hafta','Ciro ₺','Kazanç/Kayıp ₺','Ciro Kom. ₺','Kazanç Kom. ₺','Toplam Kom. ₺','Tipsterlar']];
+  entries.forEach(e=>rows.push(['...'+last4(e.m.tc),e.m.tel,e.m.ad,e.hafta||'',e.ciro,e.kaz,e.ck,e.kk,e.ck+e.kk,e.tips.join(', ')]));
+  rows.push([]);
+  rows.push(['TIPSTER ÖZET','','','','','','Ciro Kom.','Kazanç Kom.','Toplam Kom.','Üye Sayısı']);
+  const tm={}; TIPSTERS.forEach(t=>tm[t]=[]);
+  entries.forEach(e=>e.tips.forEach(t=>{if(tm[t])tm[t].push(e);}));
+  TIPSTERS.filter(t=>tm[t].length).forEach(t=>{
+    const ms=tm[t];
+    rows.push([t,'','','','','',ms.reduce((s,e)=>s+e.ck,0),ms.reduce((s,e)=>s+e.kk,0),ms.reduce((s,e)=>s+e.ck+e.kk,0),ms.length]);
+  });
+  const ws=XLSX.utils.aoa_to_sheet(rows), wbx=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wbx,ws,'Panel');
+  XLSX.writeFile(wbx,'tipster_panel_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  toast('Excel indirildi','ok');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  MEMBER LIST
+// ═══════════════════════════════════════════════════════════════
+function buildMemberList(filter) {
+  const q = String(filter||'').toLowerCase();
+  const container = document.getElementById('mList');
+  const filtered = MEMBERS.map((m,i)=>({m,i})).filter(({m})=>!q||m.ad.toLowerCase().includes(q)||m.tel.includes(q)||last4(m.tc).includes(q));
+  if (!filtered.length) {
+    container.innerHTML='<div style="padding:12px;font-size:12px;color:var(--text3);text-align:center">'+(MEMBERS.length?'Eşleşme yok':'Excel yükleyin')+'</div>';
+  } else {
+    container.innerHTML = filtered.map(({m,i})=>
+      `<label class="mitem ${selSet.has(i)?'sel':''}" id="mi${i}">
+        <input type="checkbox" ${selSet.has(i)?'checked':''} onchange="doToggleMember(${i},this.checked)">
+        <div class="minfo">
+          <span class="mname">...${last4(m.tc)} — ${m.ad}</span>
+          <span class="msub">${m.tel}${m.ciro?' · Ciro: ₺'+Number(m.ciro).toLocaleString('tr-TR'):''}</span>
+        </div>
+      </label>`
+    ).join('');
+  }
+  document.getElementById('selCount').textContent = selSet.size+' üye seçildi';
+}
+
+function doToggleMember(i, checked) {
+  checked ? selSet.add(i) : selSet.delete(i);
+  const el = document.getElementById('mi'+i);
+  if (el) el.classList.toggle('sel', checked);
+  document.getElementById('selCount').textContent = selSet.size+' üye seçildi';
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  TIPSTER CHECKS
+// ═══════════════════════════════════════════════════════════════
+function buildTipsterChecks() {
+  document.getElementById('tChecks').innerHTML = TIPSTERS.map((t,i)=>
+    `<label class="tchk" id="tl${i}" onclick="doToggleTip(${i})">
+      <input type="checkbox" id="tc${i}">
+      <span class="tdot" style="background:${TCOLORS[i]}55"></span>
+      <span class="tname">${t}</span>
+    </label>`
+  ).join('');
+}
+
+function doToggleTip(i) {
+  setTimeout(()=>{
+    const cb=document.getElementById('tc'+i), lbl=document.getElementById('tl'+i);
+    lbl.classList.toggle('sel',cb.checked);
+    lbl.querySelector('.tdot').style.background = cb.checked ? TCOLORS[i] : TCOLORS[i]+'55';
+  },0);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  RECALC & CELLS
+// ═══════════════════════════════════════════════════════════════
+function doRecalc() {
+  const cr=getR('rCiro'), kr=getR('rKazanc');
+  entries = entries.map(e=>({...e, ck:parseFloat((e.ciro*cr/100).toFixed(4)), kk:e.kaz>0?parseFloat((e.kaz*kr/100).toFixed(4)):0, cr, kr}));
+  doSave(); render();
+}
+
+function editCell(i, field, td) {
+  if (td.querySelector('.ieditor')) return;
+  const cur = entries[i][field]||0;
+  td.innerHTML=`<input class="ieditor" type="text" inputmode="decimal" value="${cur}"
+    onblur="saveCell(${i},'${field}',this)"
+    onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape')render();">
+    <span class="iedhint">↵ kaydet</span>`;
+  td.querySelector('input').focus(); td.querySelector('input').select();
+}
+
+function saveCell(i, field, input) {
+  const val=num(input.value); entries[i][field]=val;
+  const cr=entries[i].cr||getR('rCiro'), kr=entries[i].kr||getR('rKazanc');
+  if (field==='ciro') entries[i].ck=parseFloat((val*cr/100).toFixed(4));
+  if (field==='kaz')  entries[i].kk=val>0?parseFloat((val*kr/100).toFixed(4)):0;
+  doSave(); render();
+}
+
+function editHafta(i, td) {
+  if (td.querySelector('.ieditor')) return;
+  td.innerHTML=`<input class="ieditor" type="text" value="${entries[i].hafta||''}" style="width:110px"
+    onblur="saveHafta(${i},this)"
+    onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape')render();">`;
+  td.querySelector('input').focus();
+}
+function saveHafta(i, inp) { entries[i].hafta=inp.value.trim(); doSave(); render(); }
+
+function removeEntry(i) {
+  modal('Kaydı Sil',
+    `<strong style="color:var(--text)">...${last4(entries[i].m.tc)} — ${maskName(entries[i].m.ad)}</strong><br><span style="font-size:12px;color:var(--text3)">Bu kayıt silinecek. Emin misiniz?</span>`,
+    [{label:'İptal',cls:'mbtn-cancel',fn:null},{label:'Evet, Sil',cls:'mbtn-warn',fn:()=>{entries.splice(i,1);doSave();render();toast('Kayıt silindi','ok');}}]);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ARŞİV
+// ═══════════════════════════════════════════════════════════════
+function archiveEntry(i) {
+  const e = entries[i];
+  modal('Kaydı Arşivle',
+    `<strong style="color:var(--text)">...${last4(e.m.tc)} — ${maskName(e.m.ad)}</strong><br>
+    <span style="font-size:12px;color:var(--text3)">Bu kayıt arşive taşınacak. Tüm üyeler listesinden kaldırılır.</span>`,
+    [
+      {label:'İptal',cls:'mbtn-cancel',fn:null},
+      {label:'📦 Arşivle',cls:'mbtn-ok',fn:()=>{
+        const archived = { ...e, archivedAt: new Date().toISOString().slice(0,10) };
+        arsivData.unshift(archived);
+        arsivSave();
+        entries.splice(i,1);
+        doSave(); render(); renderArsiv();
+        toast('Kayıt arşive taşındı','ok');
+      }}
+    ]);
+}
+
+function renderArsiv() {
+  const q = (document.getElementById('arsivSearch')?.value||'').toLowerCase();
+  const filtered = arsivData.filter(e =>
+    !q ||
+    (e.m.ad||'').toLowerCase().includes(q) ||
+    (e.m.tel||'').includes(q) ||
+    last4(e.m.tc).includes(q) ||
+    (e.hafta||'').toLowerCase().includes(q) ||
+    (e.archivedAt||'').includes(q)
+  );
+
+  const empty = document.getElementById('arsivEmpty');
+  const wrap  = document.getElementById('arsivWrap');
+  const body  = document.getElementById('arsivBody');
+  const summary = document.getElementById('arsivSummary');
+
+  if (!arsivData.length) {
+    empty.style.display='block'; wrap.style.display='none'; summary.innerHTML=''; return;
+  }
+  empty.style.display='none'; wrap.style.display='';
+
+  body.innerHTML = filtered.length ? filtered.map((e,i)=>`<tr>
+    <td class="arsiv-date">${e.archivedAt||'—'}</td>
+    <td class="mono">...${last4(e.m.tc)}</td>
+    <td class="mono">${e.m.tel}</td>
+    <td>${maskName(e.m.ad)}</td>
+    <td>${e.hafta||'—'}</td>
+    <td>${fmt(e.ciro)}</td>
+    <td class="pos">${fmt(e.ck)}</td>
+    <td class="pos" style="font-weight:700">${fmt(e.ck+e.kk)}</td>
+    <td>${(e.tips||[]).map(t=>{const ci=TIPSTERS.indexOf(t);return`<span class="badge" style="background:rgba(${rgb(TCOLORS[ci<0?0:ci])},.12);color:${TCOLORS[ci<0?0:ci]}">${t}</span>`;}).join('')}</td>
+    <td><button class="dbtn" onclick="arsivSilEntry(${arsivData.indexOf(e)})" title="Arşivden Sil">sil</button></td>
+  </tr>`).join('')
+  : `<tr><td colspan="10" style="text-align:center;color:var(--text3);padding:24px">Arama sonucu bulunamadı.</td></tr>`;
+
+  const totCiro = arsivData.reduce((s,e)=>s+e.ciro,0);
+  const totKom  = arsivData.reduce((s,e)=>s+e.ck+e.kk,0);
+  summary.innerHTML = `
+    <div>Toplam Arşiv: <span>${arsivData.length} kayıt</span></div>
+    <div>Toplam Ciro: <span>${fmt(totCiro)}</span></div>
+    <div>Toplam Komisyon: <span>${fmt(totKom)}</span></div>
+    ${q ? `<div>Filtre Sonucu: <span>${filtered.length} kayıt</span></div>` : ''}
+  `;
+}
+
+function arsivSilEntry(i) {
+  modal('Arşiv Kaydını Sil',
+    `<span style="font-size:13px;color:var(--text2)">Bu kayıt arşivden kalıcı olarak silinecek. Bu işlem geri alınamaz.</span>`,
+    [
+      {label:'İptal',cls:'mbtn-cancel',fn:null},
+      {label:'Evet, Sil',cls:'mbtn-warn',fn:()=>{
+        arsivData.splice(i,1); arsivSave(); renderArsiv();
+        toast('Arşiv kaydı silindi','ok');
+      }}
+    ]);
+}
+
+function arsivClear() {
+  if (!arsivData.length) { toast('Arşiv zaten boş','warn'); return; }
+  modal('Arşivi Temizle',
+    `<div style="color:var(--red);font-weight:600;margin-bottom:10px">Dikkat!</div>
+    Tüm <strong>${arsivData.length} arşiv kaydı</strong> kalıcı olarak silinecek. Bu işlem geri alınamaz.`,
+    [
+      {label:'İptal',cls:'mbtn-cancel',fn:null},
+      {label:'Tümünü Sil',cls:'mbtn-warn',fn:()=>{
+        arsivData=[]; arsivSave(); renderArsiv();
+        toast('Arşiv temizlendi','ok');
+      }}
+    ]);
+}
+
+function arsivExport() {
+  if (!arsivData.length) { toast('Arşivde kayıt yok','warn'); return; }
+  const rows = [['Arşiv Tarihi','Üye TC (Son 4)','Telefon','Açıklama','Hafta','Ciro ₺','Ciro Kom. ₺','Kazanç Kom. ₺','Toplam Kom. ₺','Tipsterlar']];
+  arsivData.forEach(e=>rows.push([
+    e.archivedAt||'',
+    '...'+last4(e.m.tc), e.m.tel, e.m.ad,
+    e.hafta||'', e.ciro, e.ck, e.kk, e.ck+e.kk,
+    (e.tips||[]).join(', ')
+  ]));
+  const ws=XLSX.utils.aoa_to_sheet(rows), wbx=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wbx,ws,'Arşiv');
+  XLSX.writeFile(wbx,'tipster_arsiv_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  toast('Arşiv Excel indirildi','ok');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  TABS
+// ═══════════════════════════════════════════════════════════════
+function switchTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+  if (name === 'arsiv') renderArsiv();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════════════════════
+function render() {
+  const body=document.getElementById('tBody'), empty=document.getElementById('tEmpty');
+  if (!entries.length) {
+    body.innerHTML=''; empty.style.display='block';
+  } else {
+    empty.style.display='none';
+    body.innerHTML = entries.map((e,i)=>`<tr>
+      <td class="mono">...${last4(e.m.tc)}</td>
+      <td class="mono">${e.m.tel}</td>
+      <td>${maskName(e.m.ad)}</td>
+      <td class="editable" onclick="editHafta(${i},this)" title="Düzenle">${e.hafta||'—'}</td>
+      <td class="editable" onclick="editCell(${i},'ciro',this)" title="Düzenle">${fmt(e.ciro)}</td>
+      <td class="pos">${fmt(e.ck)}</td>
+      <td class="pos" style="font-weight:700">${fmt(e.ck+e.kk)}</td>
+      <td>${e.tips.map(t=>{const ci=TIPSTERS.indexOf(t);return`<span class="badge" style="background:rgba(${rgb(TCOLORS[ci])},.12);color:${TCOLORS[ci]}">${t}</span>`;}).join('')}</td>
+      <td><button class="dbtn abtn" onclick="archiveEntry(${i})" title="Arşivle">📦</button><button class="dbtn" onclick="removeEntry(${i})">sil</button></td>
+    </tr>`).join('');
+  }
+
+  entries.forEach(e=>e.tips.forEach(t=>{if(!TIPSTERS.includes(t))TIPSTERS.push(t);}));
+  const tm={}; TIPSTERS.forEach(t=>tm[t]=[]);
+  entries.forEach(e=>e.tips.forEach(t=>{if(tm[t])tm[t].push(e);}));
+  const tCards=document.getElementById('tCards');
+  tCards.innerHTML = TIPSTERS.map((t,idx)=>{
+    const ms=tm[t]||[], tc=ms.reduce((s,e)=>s+e.ck,0), col=getTColor(idx), isEmpty=ms.length===0;
+    return `<div class="tcard${isEmpty?' empty-card':''}" ${isEmpty?'':` onclick="openTipsterDetail(${idx})"`} style="${isEmpty?'opacity:0.5':''}">
+      <div class="tcard-head">
+        <div>
+          <div class="tcard-name" style="color:${col}">${t}</div>
+          <div class="tcard-cnt">${isEmpty?'Üye yok':ms.length+' üye'}</div>
+        </div>
+        <div>
+          <div class="tcard-earn" style="color:${isEmpty?'var(--text3)':''}">${isEmpty?'—':fmt(tc)}</div>
+          <div class="tcard-esub">${isEmpty?'Henüz üye eklenmedi':'Tipster Kom. '+fmt(tc)}</div>
+        </div>
+      </div>
+      ${isEmpty?'':`<div>
+        <div class="trow trow-hdr" style="grid-template-columns:1fr 90px 90px"><span>Üye</span><span class="tv">Bakiye+Kaz.</span><span class="tv">Tipster Kom.</span></div>
+        ${ms.map(e=>`<div class="trow" style="grid-template-columns:1fr 90px 90px">
+          <span class="trow-name mono">...${last4(e.m.tc)} <span style="color:var(--text3)">${e.hafta||''}</span></span>
+          <span class="tv">${fmt(e.ciro)}</span>
+          <span class="tv pos">${fmt(e.ck)}</span>
+        </div>`).join('')}
+      </div>`}
+    </div>`;
+  }).join('');
+
+  const totC=entries.reduce((s,e)=>s+e.ciro,0), totCK=entries.reduce((s,e)=>s+e.ck,0), totKK=entries.reduce((s,e)=>s+e.kk,0);
+  document.getElementById('totUye').textContent  = entries.length;
+  document.getElementById('totCiro').textContent = fmt(totC);
+  document.getElementById('totCK').textContent   = fmt(totCK);
+  document.getElementById('totAll').textContent  = fmt(totCK+totKK);
+  document.getElementById('h-uye').textContent    = entries.length;
+  document.getElementById('h-ciro').textContent   = fmt(totCK);
+  document.getElementById('h-kazanc').textContent = fmt(totKK);
+  document.getElementById('h-total').textContent  = fmt(totCK+totKK);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  TİPSTER DETAY
+// ═══════════════════════════════════════════════════════════════
+function openTipsterDetail(idx) {
+  const t = TIPSTERS[idx];
+  const col = getTColor(idx);
+  const tm = {};
+  TIPSTERS.forEach(tp => tm[tp] = []);
+  entries.forEach(e => e.tips.forEach(tp => { if (tm[tp]) tm[tp].push(e); }));
+  const ms = tm[t] || [];
+
+  const totCiro = ms.reduce((s,e)=>s+e.ciro,0);
+  const totCK   = ms.reduce((s,e)=>s+e.ck,0);
+  const totKom  = ms.reduce((s,e)=>s+e.ck+e.kk,0);
+
+  document.getElementById('tdTitle').textContent = t;
+  document.getElementById('tdTitle').style.color = col;
+  document.getElementById('tdSubtitle').textContent = ms.length + ' üye · Toplam Ciro: ' + fmt(totCiro);
+  document.getElementById('tdKom').textContent = fmt(totCK);
+  document.getElementById('tdUye').textContent = ms.length;
+
+  document.getElementById('tdBody').innerHTML = ms.map(e => `<tr>
+    <td class="mono">...${last4(e.m.tc)}</td>
+    <td class="mono">${e.m.tel}</td>
+    <td>${maskName(e.m.ad)}</td>
+    <td>${e.hafta||'—'}</td>
+    <td class="num">${fmt(e.ciro)}</td>
+    <td class="pos">${fmt(e.ck)}</td>
+    <td class="pos">${fmt(e.ck+e.kk)}</td>
+  </tr>`).join('');
+
+  document.getElementById('tdFoot').innerHTML = `
+    <div class="td-foot-item">Toplam Ciro: <span>${fmt(totCiro)}</span></div>
+    <div class="td-foot-item">Tipster Kom.: <span>${fmt(totCK)}</span></div>
+    <div class="td-foot-item">Toplam Kom.: <span>${fmt(totKom)}</span></div>
+  `;
+
+  const overlay = document.getElementById('tipsterDetail');
+  overlay.classList.add('show');
+  overlay.onclick = e => { if (e.target === overlay) closeTipsterDetail(); };
+}
+
+function closeTipsterDetail() {
+  document.getElementById('tipsterDetail').classList.remove('show');
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeTipsterDetail();
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  ÇIKIŞ
+// ═══════════════════════════════════════════════════════════════
+function doLogout() {
+  modal('Çıkış Yap',
+    '<span style="font-size:13px;color:var(--text2)">Panelden çıkış yapılacak. Verileriniz korunacaktır.</span>',
+    [
+      {label:'İptal', cls:'mbtn-cancel', fn: null},
+      {label:'Çıkış Yap', cls:'mbtn-warn', fn: () => {
+        document.getElementById('mainApp').style.display = 'none';
+        document.getElementById('licenseScreen').style.display = '';
+        document.getElementById('loginPassInput').value = '';
+        document.getElementById('loginErr').textContent = '';
+        showLoginStep();
+      }}
+    ]);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  LİSANS YÖNETİCİ MODALI
+// ═══════════════════════════════════════════════════════════════
+function showLicManager() {
+  const list = document.getElementById('licList');
+  const codes = Object.entries(LIC_CODES);
+  const saved = getSavedLic();
+  list.innerHTML = codes.map(([code, lic]) => {
+    const today = new Date().toISOString().slice(0,10);
+    let status = 'active', statusTxt = 'Aktif';
+    if (lic.type === 'annual' && lic.expiry < today) { status = 'expired'; statusTxt = 'Süresi Doldu'; }
+    const isCurrent = saved && saved.code === code;
+    return `<div class="lic-code-row" style="${isCurrent?'border-color:var(--accent);background:rgba(67,97,238,.05)':''}">
+      <div>
+        <div class="lic-code-val">${code} ${isCurrent?'<span style="font-size:10px;color:var(--accent)">(Aktif)</span>':''}</div>
+        <div class="lic-code-exp">${lic.label} · ${lic.type==='annual'?'Yıllık · Bitiş: '+lic.expiry:'Tek Kullanım'}</div>
+      </div>
+      <span class="lic-status-badge ${status}">${statusTxt}</span>
+    </div>`;
+  }).join('');
+  document.getElementById('licMgrOverlay').classList.add('show');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  BAŞLANGIÇ — Sayfa yüklendiğinde
+// ═══════════════════════════════════════════════════════════════
+(function init() {
+  const saved     = getSavedLic();
+  const storedHash = localStorage.getItem(LIC_PASS_SK);
+  if (saved && storedHash) {
+    showLoginStep();
+  } else {
+    showStep('stepLicense');
+  }
+})();
+</script>
+</body>
+</html>
